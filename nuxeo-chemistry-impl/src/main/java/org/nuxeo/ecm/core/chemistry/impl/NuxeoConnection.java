@@ -53,6 +53,12 @@ import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentModelList;
 import org.nuxeo.ecm.core.api.IdRef;
 
+/**
+ * Nuxeo CMIS Connection wrapper.
+ *
+ * @author Florent Guillaume
+ * @author Bogdan Stefanescu
+ */
 public class NuxeoConnection implements Connection, SPI {
 
     protected final NuxeoRepository repository;
@@ -80,6 +86,25 @@ public class NuxeoConnection implements Connection, SPI {
         }
     }
 
+    /**
+     * Attach the connection to an existing CoreSession. 
+     * Can be useful to instantiate connections that reuse already opened sessions
+     * @param repository
+     * @param session
+     */
+    public NuxeoConnection(NuxeoRepository repository,
+            CoreSession session) {
+        this.repository = repository;
+        this.session = session;
+        try {
+            String rootFolderId = session.getRootDocument().getId();
+            rootFolder = (NuxeoFolder) getObject(rootFolderId,
+                    ReturnVersion.THIS);
+        } catch (ClientException e) {
+            throw new RuntimeException("Could not connect", e); // TODO
+        }
+    }
+
     public Connection getConnection() {
         return this;
     }
@@ -98,6 +123,10 @@ public class NuxeoConnection implements Connection, SPI {
 
     public Folder getRootFolder() {
         return rootFolder;
+    }
+    
+    public List<ObjectEntry> getChildren(String folderId) {
+        return getChildren(folderId, null, null, false, false, Integer.MAX_VALUE, 0, null, new boolean[1]);
     }
 
     /*

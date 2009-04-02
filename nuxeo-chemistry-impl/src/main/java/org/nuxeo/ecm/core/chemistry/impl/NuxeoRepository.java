@@ -39,6 +39,12 @@ import org.nuxeo.ecm.core.schema.DocumentType;
 import org.nuxeo.ecm.core.schema.SchemaManager;
 import org.nuxeo.runtime.api.Framework;
 
+/**
+ * Nuxeo CMIS Repository wrapper.
+ *
+ * @author Florent Guillaume
+ * @author Bogdan Stefanescu
+ */
 public class NuxeoRepository implements Repository, RepositoryInfo,
         RepositoryCapabilities {
 
@@ -239,4 +245,9 @@ public class NuxeoRepository implements Repository, RepositoryInfo,
         return QueryCapability.BOTH_COMBINED;
     }
 
+    public <T> T getExtension(Class<T> klass) {
+        // Not yet implemented
+        return null;
+    }
+    
 }

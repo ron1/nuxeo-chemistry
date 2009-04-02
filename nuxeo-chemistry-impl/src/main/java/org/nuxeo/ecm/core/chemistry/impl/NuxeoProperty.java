@@ -23,7 +23,6 @@ import java.io.Serializable;
 import org.apache.chemistry.property.Property;
 import org.apache.chemistry.property.PropertyDefinition;
 import org.apache.chemistry.property.Updatability;
-import org.apache.chemistry.type.ContentStreamPresence;
 import org.apache.chemistry.type.Type;
 import org.nuxeo.ecm.core.api.ClientException;
 import org.nuxeo.ecm.core.api.CoreSession;

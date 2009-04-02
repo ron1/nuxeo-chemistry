@@ -47,6 +47,12 @@ import org.nuxeo.ecm.core.schema.types.primitives.DateType;
 import org.nuxeo.ecm.core.schema.types.primitives.LongType;
 import org.nuxeo.ecm.core.schema.types.primitives.StringType;
 
+/**
+ * Nuxeo CMIS Type wrapper.
+ *
+ * @author Florent Guillaume
+ * @author Bogdan Stefanescu
+ */
 public class NuxeoType implements Type {
 
     private static final Log log = LogFactory.getLog(NuxeoType.class);
@@ -243,7 +249,6 @@ public class NuxeoType implements Type {
             }
             for (Field field : schema.getFields()) {
                 String prefixedName = field.getName().getPrefixedName();
-                String fieldName = field.getName().getLocalName();
 
                 String name;
                 boolean inherited = false;
