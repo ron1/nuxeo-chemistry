@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Nuxeo ECM Core Chemistry Bindings
+Bundle-SymbolicName: org.nuxeo.chemistry.client.app;singleton:=true
+Bundle-Vendor: Nuxeo
+Bundle-Localization: bundle
+Export-Package: org.nuxeo.chemistry.client.app
+Eclipse-LazyStart: true
+Eclipse-ExtensibleAPI: true

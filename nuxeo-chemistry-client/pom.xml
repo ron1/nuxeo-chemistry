@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <prerequisites>
+    <maven>2.0.9</maven>
+  </prerequisites>
+
+  <parent>
+    <groupId>org.nuxeo.ecm.core</groupId>
+    <artifactId>nuxeo-chemistry</artifactId>
+    <version>1.5-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>nuxeo-chemistry-client</artifactId>
+  <name>Nuxeo Chemistry APP Client</name>
+  <description>Nuxeo Chemistry APP Client</description>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.apache.chemistry</groupId>
+      <artifactId>chemistry-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.chemistry</groupId>
+      <artifactId>chemistry-atompub</artifactId>
+    </dependency>
+
+    <!--dependency>
+      <groupId>org.apache.chemistry</groupId>
+      <artifactId>chemistry-commons</artifactId>
+    </dependency-->
+
+    <dependency>
+      <groupId>stax</groupId>
+      <artifactId>stax-api</artifactId>
+      <version>1.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.woodstox</groupId>
+      <artifactId>wstx-asl</artifactId>
+      <version>3.2.1</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>commons-httpclient</groupId>
+      <artifactId>commons-httpclient</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>commons-collections</groupId>
+      <artifactId>commons-collections</artifactId>
+      <type>jar</type>
+    </dependency>
+
+  </dependencies>
+
+</project>

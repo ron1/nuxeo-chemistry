@@ -125,10 +125,16 @@ public class NuxeoConnection implements Connection, SPI {
         return rootFolder;
     }
     
-    public List<ObjectEntry> getChildren(String folderId) {
-        return getChildren(folderId, null, null, false, false, Integer.MAX_VALUE, 0, null, new boolean[1]);
+    public ObjectEntry getRootEntry() {
+        return rootFolder;
+    }
+    
+    public List<ObjectEntry> getChildren(ObjectEntry folder) {
+        return getChildren(folder.getId(), null, null, false, false, Integer.MAX_VALUE, 0, null, new boolean[1]);
     }
 
+    
+    
     /*
      * ----- Factories -----
      */
