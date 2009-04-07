@@ -52,7 +52,7 @@ public class CompositeCompletor implements Completor {
         completors.put("command", completor);
         completors.put("file", new FileNameCompletor());
         completors.put("dir", new DirectoryCompletor());
-        completors.put("item", new DocumentNameCompletor(console));
+        completors.put("item", new ContextItemCompletor());
 
         //classname completor is parsing system jars at startup. also it does't work on mac
         // I get a java.util.zip.ZipException: error in opening zip file because it tries to load a lib file as a jar

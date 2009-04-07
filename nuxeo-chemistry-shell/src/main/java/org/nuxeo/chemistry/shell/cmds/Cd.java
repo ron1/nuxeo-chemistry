@@ -20,24 +20,32 @@
 package org.nuxeo.chemistry.shell.cmds;
 
 import org.nuxeo.chemistry.client.common.Path;
+import org.nuxeo.chemistry.shell.Application;
+import org.nuxeo.chemistry.shell.Console;
+import org.nuxeo.chemistry.shell.Context;
 import org.nuxeo.chemistry.shell.command.AnnotatedCommand;
 import org.nuxeo.chemistry.shell.command.Cmd;
 import org.nuxeo.chemistry.shell.command.CommandLine;
 import org.nuxeo.chemistry.shell.command.CommandParameter;
-import org.nuxeo.chemistry.shell.context.Application;
+
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
-@Cmd(syntax="cd [dir:file]", synopsis="Change working directory")
+@Cmd(syntax="cd target:item", synopsis="Change working item")
 public class Cd extends AnnotatedCommand {
 
     @Override
     public void run(Application app, CommandLine cmdLine) throws Exception {
         CommandParameter param = cmdLine.getLastParameter();
-        if (param != null) {
-            app.setContext(app.resolve(new Path(param.getValue())));
+        if (param != null && param.getValue() != null) {
+            Context ctx = app.resolve(new Path(param.getValue()));
+            if (ctx != null) {
+                app.setContext(ctx);
+            } else {
+                Console.getDefault().warn("Cannot resolve "+param.getValue());
+            }
         }
     }
 

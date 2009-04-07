@@ -22,9 +22,9 @@ import java.io.InputStream;
 import org.nuxeo.chemistry.shell.command.CommandException;
 import org.nuxeo.chemistry.shell.command.CommandLine;
 import org.nuxeo.chemistry.shell.command.CommandRegistry;
-import org.nuxeo.chemistry.shell.context.Application;
 import org.nuxeo.chemistry.shell.util.FileUtils;
 import org.nuxeo.chemistry.shell.util.PwdReader;
+
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>

@@ -16,8 +16,7 @@
  */
 package org.nuxeo.chemistry.shell.command;
 
-import org.nuxeo.chemistry.shell.Client;
-import org.nuxeo.chemistry.shell.context.Application;
+import org.nuxeo.chemistry.shell.Application;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>

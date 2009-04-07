@@ -19,24 +19,37 @@
 
 package org.nuxeo.chemistry.shell.cmds;
 
+import org.nuxeo.chemistry.client.common.Path;
+import org.nuxeo.chemistry.shell.Application;
 import org.nuxeo.chemistry.shell.Console;
+import org.nuxeo.chemistry.shell.Context;
 import org.nuxeo.chemistry.shell.command.AnnotatedCommand;
 import org.nuxeo.chemistry.shell.command.Cmd;
 import org.nuxeo.chemistry.shell.command.CommandLine;
-import org.nuxeo.chemistry.shell.context.Application;
+import org.nuxeo.chemistry.shell.command.CommandParameter;
+
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
-@Cmd(syntax="ls", synopsis="List entries in working directory")
+@Cmd(syntax="ls [target:item]", synopsis="List entries in working directory")
 public class Ls extends AnnotatedCommand {
 
     @Override
     public void run(Application app, CommandLine cmdLine) throws Exception {
         Console console = Console.getDefault();
-        for (String line : app.getContext().ls()) {
-            console.println(line);
+        CommandParameter param = cmdLine.getLastParameter();
+        Context ctx = null;
+        if (param == null || param.getValue() == null) {
+            ctx = app.getContext();
+        } else {
+            ctx = app.resolve(new Path(param.getValue()));
+        }
+        if (ctx != null) {
+            for (String line : app.getContext().ls()) {
+                console.println(line);
+            }
         }
     }
 

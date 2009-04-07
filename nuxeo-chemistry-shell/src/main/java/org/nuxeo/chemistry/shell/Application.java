@@ -14,7 +14,7 @@
  * Contributors:
  *     bstefanescu
  */
-package org.nuxeo.chemistry.shell.context;
+package org.nuxeo.chemistry.shell;
 
 import java.io.File;
 import java.io.IOException;

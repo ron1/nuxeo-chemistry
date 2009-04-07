@@ -14,7 +14,7 @@
  * Contributors:
  *     bstefanescu
  */
-package org.nuxeo.chemistry.shell.context;
+package org.nuxeo.chemistry.shell.app;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,7 +25,10 @@ import org.nuxeo.chemistry.client.ContentManager;
 import org.nuxeo.chemistry.client.app.APPConnection;
 import org.nuxeo.chemistry.client.app.APPContentManager;
 import org.nuxeo.chemistry.client.common.Path;
+import org.nuxeo.chemistry.shell.AbstractContext;
 import org.nuxeo.chemistry.shell.Console;
+import org.nuxeo.chemistry.shell.Context;
+import org.nuxeo.chemistry.shell.console.ColorHelper;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
@@ -34,6 +37,7 @@ import org.nuxeo.chemistry.shell.Console;
 public class ChemistryRootContext extends AbstractContext {
 
     protected String[] keys;
+    protected String[] ls;
 
     public ChemistryRootContext(ChemistryApp app) {
         super (app, Path.ROOT);
@@ -73,6 +77,13 @@ public class ChemistryRootContext extends AbstractContext {
 
     public String[] ls() {
         if (load()) {
+            return ls;
+        }
+        return new String[0]; 
+    }
+    
+    public String[] entries() {
+        if (load()) {
             return keys;
         }
         return new String[0]; 
@@ -91,8 +102,10 @@ public class ChemistryRootContext extends AbstractContext {
             }
             Repository[] repos = cm.getRepositories();
             keys = new String[repos.length];
+            ls = new String[repos.length];
             for (int i=0; i<repos.length; i++) {
                 keys[i] = repos[i].getName();
+                ls[i] = ColorHelper.decorateNameByType(repos[i].getName(), "Repository");
             }
         }
         return true;
@@ -100,6 +113,7 @@ public class ChemistryRootContext extends AbstractContext {
     
     public void reset() {
         keys = null;
+        ls = null;
         APPContentManager cm = getContentManager();
         if (cm != null) {
             cm.refresh();

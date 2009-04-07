@@ -25,9 +25,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.nuxeo.chemistry.shell.Application;
 import org.nuxeo.chemistry.shell.Console;
-import org.nuxeo.chemistry.shell.context.Application;
 import org.nuxeo.chemistry.shell.util.StringUtils;
+
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>

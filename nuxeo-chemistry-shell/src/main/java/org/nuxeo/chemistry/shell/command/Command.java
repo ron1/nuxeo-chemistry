@@ -23,8 +23,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
-import org.nuxeo.chemistry.shell.context.Application;
+import org.nuxeo.chemistry.shell.Application;
 import org.nuxeo.chemistry.shell.util.FileUtils;
+
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>

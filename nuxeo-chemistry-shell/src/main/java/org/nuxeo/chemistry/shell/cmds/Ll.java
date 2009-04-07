@@ -21,18 +21,19 @@ package org.nuxeo.chemistry.shell.cmds;
 
 import java.io.File;
 
+import org.nuxeo.chemistry.shell.Application;
 import org.nuxeo.chemistry.shell.Console;
 import org.nuxeo.chemistry.shell.command.AnnotatedCommand;
 import org.nuxeo.chemistry.shell.command.Cmd;
 import org.nuxeo.chemistry.shell.command.CommandLine;
 import org.nuxeo.chemistry.shell.command.CommandParameter;
-import org.nuxeo.chemistry.shell.context.Application;
+
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
-@Cmd(syntax="ll [file:file]", synopsis="List local directory content")
+@Cmd(syntax="ll [target:file]", synopsis="List local directory content")
 public class Ll extends AnnotatedCommand {
 
     @Override

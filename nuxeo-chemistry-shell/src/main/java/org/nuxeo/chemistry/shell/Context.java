@@ -14,43 +14,28 @@
  * Contributors:
  *     bstefanescu
  */
-package org.nuxeo.chemistry.shell.context;
+package org.nuxeo.chemistry.shell;
 
-import java.io.IOException;
+import java.io.InputStream;
 
-import org.nuxeo.chemistry.client.app.APPContentManager;
+import org.nuxeo.chemistry.client.common.Path;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
-public class ChemistryApp extends AbstractApplication {
+public interface Context {
 
-    protected APPContentManager cm;
-
-
-    public ChemistryApp() {                
-    }
+    public String pwd();
+    public String[] entries();
+    public String[] ls(); //colored entries
+    public void post(String name, InputStream in);
+    public void put(String name, InputStream in);
+    public void delete(String name);
+    public boolean exists(String name);
+    public Context getContext(String name);
+    public Path getPath();
+    public Application getApplication();
+    public void reset();
     
-    @Override
-    protected void doConnect() throws IOException {
-        cm = new APPContentManager(serverUrl.toExternalForm());
-    }
-    
-    public void disconnect() {
-        cm = null;
-    }
-    
-    public boolean isConnected() {
-        return cm != null;
-    }
-    
-    public Context getRootContext() {
-        return new ChemistryRootContext(this);
-    }
-    
-    public APPContentManager getContentManager() {
-        return cm;
-    }
-
 }

@@ -14,27 +14,37 @@
  * Contributors:
  *     bstefanescu
  */
-package org.nuxeo.chemistry.shell.context;
-
-import java.io.InputStream;
+package org.nuxeo.chemistry.shell;
 
 import org.nuxeo.chemistry.client.common.Path;
+import org.nuxeo.chemistry.shell.console.ColorHelper;
+
+import sun.beans.editors.ColorEditor;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
-public interface Context {
+public abstract class AbstractContext implements Context {
 
-    public String pwd();
-    public String[] ls();
-    public void post(String name, InputStream in);
-    public void put(String name, InputStream in);
-    public void delete(String name);
-    public boolean exists(String name);
-    public Context getContext(String name);
-    public Path getPath();
-    public Application getApplication();
-    public void reset();
+    protected Application app;
+    protected Path path;
     
+    public AbstractContext(Application app, Path path) {
+        this.app = app;
+        this.path = path;
+    }
+    
+    public String pwd() {
+        return path.toString();
+    }
+    
+    public Path getPath() {
+        return path;
+    }
+    
+    public Application getApplication() {
+        return app;
+    }
+
 }

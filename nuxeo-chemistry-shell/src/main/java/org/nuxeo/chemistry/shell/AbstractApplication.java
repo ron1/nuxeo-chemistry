@@ -14,7 +14,7 @@
  * Contributors:
  *     bstefanescu
  */
-package org.nuxeo.chemistry.shell.context;
+package org.nuxeo.chemistry.shell;
 
 import java.io.File;
 import java.io.IOException;
@@ -22,8 +22,9 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.swing.text.Segment;
+
 import org.nuxeo.chemistry.client.common.Path;
-import org.nuxeo.chemistry.shell.Console;
 import org.nuxeo.chemistry.shell.command.CommandRegistry;
 
 /**
@@ -120,10 +121,36 @@ public abstract class AbstractApplication implements Application {
     }
     
     public Context resolve(Path path) {
-        path = path.makeAbsolute();
-        Context c = getRootContext();
-        for (int i=0,cnt=path.segmentCount(); i<cnt; i++) {
+        Context c = null;
+        if (path.isRelative()) {
+            if (path.segmentCount() == 0) {
+                return getContext();
+            }
+            boolean dotdot = false;
+            while (path.segmentCount() > 0) {
+                String seg = path.segment(0);
+                if (seg.equals(".")) {
+                    path = path.removeFirstSegments(1);
+                } else if (seg.equals("..")) {
+                    dotdot = true;
+                    break;
+                } else {
+                    break;
+                }
+            }
+            if (dotdot) {
+                path = getContext().getPath().append(path);
+                c = getRootContext();
+            } else {
+                c = getContext();
+            }
+        } else {
+            c = getRootContext();
+        }
+        if (c == null) return null;        
+        for (int i=0,cnt=path.segmentCount(); i<cnt; i++) {            
             c = c.getContext(path.segment(i));
+            if (c == null) return null;
         }
         return c;
     }

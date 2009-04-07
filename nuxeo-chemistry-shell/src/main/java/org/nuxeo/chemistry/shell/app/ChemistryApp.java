@@ -14,35 +14,45 @@
  * Contributors:
  *     bstefanescu
  */
-package org.nuxeo.chemistry.shell.context;
+package org.nuxeo.chemistry.shell.app;
 
-import org.nuxeo.chemistry.client.common.Path;
+import java.io.IOException;
+
+import org.nuxeo.chemistry.client.app.APPContentManager;
+import org.nuxeo.chemistry.shell.AbstractApplication;
+import org.nuxeo.chemistry.shell.Context;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
-public abstract class AbstractContext implements Context {
+public class ChemistryApp extends AbstractApplication {
 
-    protected Application app;
-    protected Path path;
-    
-    public AbstractContext(Application app, Path path) {
-        this.app = app;
-        this.path = path;
+    protected APPContentManager cm;
+
+
+    public ChemistryApp() {                
     }
     
-    public String pwd() {
-        return path.toString();
+    @Override
+    protected void doConnect() throws IOException {
+        cm = new APPContentManager(serverUrl.toExternalForm());
     }
     
-    public Path getPath() {
-        return path;
+    public void disconnect() {
+        cm = null;
     }
     
-    public Application getApplication() {
-        return app;
+    public boolean isConnected() {
+        return cm != null;
     }
     
+    public Context getRootContext() {
+        return new ChemistryRootContext(this);
+    }
+    
+    public APPContentManager getContentManager() {
+        return cm;
+    }
 
 }

@@ -25,10 +25,11 @@ import jline.CandidateListCompletionHandler;
 import jline.CompletionHandler;
 import jline.ConsoleReader;
 
+import org.nuxeo.chemistry.shell.Application;
 import org.nuxeo.chemistry.shell.Console;
 import org.nuxeo.chemistry.shell.command.CommandException;
 import org.nuxeo.chemistry.shell.command.ExitException;
-import org.nuxeo.chemistry.shell.context.Application;
+
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
