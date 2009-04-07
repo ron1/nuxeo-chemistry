@@ -23,14 +23,11 @@ import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
 
 import org.apache.chemistry.atompub.CMIS;
-import org.apache.log4j.DailyRollingFileAppender;
 import org.nuxeo.chemistry.client.app.APPObjectEntry;
 import org.nuxeo.chemistry.client.app.model.DataMap;
 import org.nuxeo.chemistry.client.app.model.Value;
 import org.nuxeo.chemistry.client.app.model.ValueFactory;
 import org.nuxeo.chemistry.client.common.xml.StaxReader;
-
-import sun.text.Trie.DataManipulate;
 
 /**
  * 
@@ -99,6 +96,20 @@ public class CmisEntryReader extends AbstractEntryReader<APPObjectEntry> {
         entry.init(map);
     }
 
+    @SuppressWarnings("unchecked")
+    protected Object readValues(ValueIterator it) throws XMLStreamException {
+        Value<?> v = null, last = null;
+        if (it.hasNext()) {
+            v = ValueFactory.createValue(it.type, it.next());
+        }
+        last = v;
+        while (it.hasNext()) {
+            last.next = (Value)ValueFactory.createValue(it.type, it.next());
+            last = last.next;
+        }
+        return v;
+    }
+
     
     static class ValueIterator implements Iterator<String> {
         protected StaxReader sr;
@@ -146,41 +157,6 @@ public class CmisEntryReader extends AbstractEntryReader<APPObjectEntry> {
         public void remove() {
             throw new UnsupportedOperationException("remove not supported");
         }
-    }
-
-    @SuppressWarnings("unchecked")
-    protected Object readValues(ValueIterator it) throws XMLStreamException {
-        Value<?> v = null, last = null;
-        if (it.hasNext()) {
-            v = ValueFactory.createValue(it.type, it.next());
-        }
-        last = v;
-        while (it.hasNext()) {
-            last.next = (Value)ValueFactory.createValue(it.type, it.next());
-            last = last.next;
-        }
-        return v;
-    }
-
-    @SuppressWarnings("unchecked")
-    protected Value<?> readValues(StaxReader reader, String type) throws XMLStreamException {
-        Value<?> v = null, last = null;
-        while (reader.fwd()) {
-            int tok = reader.getEventType();
-            String localName = reader.getLocalName();
-            if (tok == START_ELEMENT && localName.equals("value")) {
-                if (last == null) {
-                    v = ValueFactory.createValue(type, reader.getElementText());
-                    last = v;
-                } else {
-                    last.next = (Value)ValueFactory.createValue(type, reader.getElementText());
-                    last = last.next; 
-                }
-            } else if (tok == END_ELEMENT && localName.startsWith("property")) {
-                break;
-            }
-        }
-        return v;
     }
     
 }

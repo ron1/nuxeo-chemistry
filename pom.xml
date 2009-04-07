@@ -20,6 +20,8 @@
 
   <modules>
     <module>nuxeo-chemistry-impl</module>
+    <module>nuxeo-chemistry-client</module>
+    <module>nuxeo-chemistry-shell</module>
     <module>nuxeo-chemistry-tests</module>
   </modules>
 
@@ -32,6 +34,16 @@
       <dependency>
 	<groupId>org.nuxeo.ecm.core</groupId>
 	<artifactId>nuxeo-chemistry-impl</artifactId>
+	<version>${version}</version>
+      </dependency>
+      <dependency>
+	<groupId>org.nuxeo.ecm.core</groupId>
+	<artifactId>nuxeo-chemistry-client</artifactId>
+	<version>${version}</version>
+      </dependency>
+      <dependency>
+	<groupId>org.nuxeo.ecm.core</groupId>
+	<artifactId>nuxeo-chemistry-shell</artifactId>
 	<version>${version}</version>
       </dependency>
 
