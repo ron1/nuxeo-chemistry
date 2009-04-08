@@ -64,4 +64,11 @@ public class DecimalValue extends Value<BigDecimal> {
     public Class<?> getType() {
         return BigDecimal.class;
     }
+    
+    public static DecimalValue fromDecimal(BigDecimal value) {
+        DecimalValue v = new DecimalValue();
+        v.value = value;
+        return v;
+    }
+    
 }

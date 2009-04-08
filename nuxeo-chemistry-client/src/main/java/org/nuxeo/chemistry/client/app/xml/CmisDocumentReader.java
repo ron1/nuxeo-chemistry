@@ -16,31 +16,25 @@
  */
 package org.nuxeo.chemistry.client.app.xml;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.net.URL;
-
-import javax.xml.stream.XMLStreamConstants;
-import javax.xml.stream.XMLStreamException;
-
+import org.nuxeo.chemistry.client.app.APPConnection;
+import org.nuxeo.chemistry.client.app.APPDocument;
+import org.nuxeo.chemistry.client.app.APPObjectEntry;
 import org.nuxeo.chemistry.client.common.xml.StaxReader;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
-public interface FeedReader<T> extends XMLStreamConstants, ATOM {
-    
-    public T read(Object context, URL url) throws XMLStreamException, IOException;
-    
-    public T read(Object context, File file) throws XMLStreamException, IOException;
-    
-    public T read(Object context, InputStream in) throws XMLStreamException;
-    
-    public T read(Object context, Reader reader) throws XMLStreamException;
-    
-    public T read(Object context, StaxReader reader) throws XMLStreamException;
+public class CmisDocumentReader extends CmisEntryReader {
 
+    @Override
+    public APPObjectEntry newEntry(Object context, StaxReader reader) {
+        if (context instanceof APPConnection) {
+            return new APPDocument((APPConnection)context);    
+        } else if (context instanceof APPObjectEntry) {
+            return new APPDocument(((APPObjectEntry)context).getConnection());
+        }
+        throw new IllegalArgumentException("Invalid context object for document creation: "+context);
+    }
+    
 }

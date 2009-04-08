@@ -16,6 +16,8 @@
  */
 package org.nuxeo.chemistry.client.app.model;
 
+import java.net.URI;
+
 /**
  * TODO use URI ?
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
@@ -53,4 +55,10 @@ public class URIValue extends Value<String> {
     public Class<?> getType() {
         return String.class;
     }
+    
+    public static URIValue fromURI(URI value) {
+        return new URIValue(value.toString());
+    }
+
+
 }

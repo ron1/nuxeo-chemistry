@@ -23,6 +23,10 @@ import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
 
 import org.apache.chemistry.atompub.CMIS;
+import org.apache.chemistry.type.BaseType;
+import org.nuxeo.chemistry.client.app.APPConnection;
+import org.nuxeo.chemistry.client.app.APPDocument;
+import org.nuxeo.chemistry.client.app.APPFolder;
 import org.nuxeo.chemistry.client.app.APPObjectEntry;
 import org.nuxeo.chemistry.client.app.model.DataMap;
 import org.nuxeo.chemistry.client.app.model.Value;
@@ -38,9 +42,21 @@ import org.nuxeo.chemistry.client.common.xml.StaxReader;
  */
 public class CmisEntryReader extends AbstractEntryReader<APPObjectEntry> {
     
+    public final static CmisEntryReader INSTANCE = new CmisEntryReader();
     
-    public APPObjectEntry newEntry(StaxReader reader) {
-        return new APPObjectEntry();
+    public APPObjectEntry newEntry(Object context, StaxReader reader) {
+        if (context != null && context.getClass() == APPConnection.class) {
+            return new APPObjectEntry((APPConnection)context); 
+        } else if (context instanceof APPObjectEntry) {
+            APPObjectEntry entry = (APPObjectEntry)context;
+            if (entry.getType().getBaseType() == BaseType.FOLDER) {
+                return new APPFolder(entry.getConnection());
+            } else {
+                return new APPDocument(entry.getConnection());
+            }                
+        } else {
+            throw new IllegalArgumentException("Unsupported context type: "+context);
+        }        
     }
 
     protected void addLink(APPObjectEntry entry, String type, String href) {
@@ -49,7 +65,7 @@ public class CmisEntryReader extends AbstractEntryReader<APPObjectEntry> {
     
     
     @Override
-    protected void readAtomTag(StaxReader reader, QName name,
+    protected void readAtomTag(Object context, StaxReader reader, QName name,
             APPObjectEntry entry) throws XMLStreamException {
         // read only links - optimization to avoid useless operations
         if ("link".equals(name.getLocalPart())) {
@@ -60,7 +76,7 @@ public class CmisEntryReader extends AbstractEntryReader<APPObjectEntry> {
     }
     
     @Override
-    public void readExtensionTag(StaxReader reader, QName name, 
+    public void readExtensionTag(Object context, StaxReader reader, QName name, 
             APPObjectEntry entry) throws XMLStreamException {
         if (CMIS.OBJECT.equals(name)) {
             reader.push();

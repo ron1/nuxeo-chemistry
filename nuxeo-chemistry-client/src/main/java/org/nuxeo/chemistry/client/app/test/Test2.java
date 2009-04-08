@@ -42,9 +42,8 @@ public class Test2 {
                 new URL("http://localhost:8080/cmis/default/children/ac8e70be-567c-404b-9ce0-68ac7e2ffa26").openStream()
         );
 
-        CmisFeedReader feedReader = new CmisFeedReader();
         
-        List<APPObjectEntry> feed = feedReader.read(new StaxReader(reader));
+        List<APPObjectEntry> feed = CmisFeedReader.INSTANCE.read(null, new StaxReader(reader));
         for (APPObjectEntry entry : feed) {
             System.out.println(">>>> "+entry.getId()+", "+entry.getName()+", "+entry.getTypeId());    
         }

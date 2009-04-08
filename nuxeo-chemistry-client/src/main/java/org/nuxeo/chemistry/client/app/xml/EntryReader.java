@@ -16,6 +16,12 @@
  */
 package org.nuxeo.chemistry.client.app.xml;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.net.URL;
+
 import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
 
@@ -27,8 +33,16 @@ import org.nuxeo.chemistry.client.common.xml.StaxReader;
  */
 public interface EntryReader<T> extends XMLStreamConstants, ATOM {
 
-    public T read(StaxReader reader) throws XMLStreamException;
+    public T read(Object context, URL url) throws XMLStreamException, IOException;
     
-    public T readEntry(StaxReader reader) throws XMLStreamException;
+    public T read(Object context, File file) throws XMLStreamException, IOException;
+    
+    public T read(Object context, Reader reader) throws XMLStreamException;
+    
+    public T read(Object context, InputStream in) throws XMLStreamException;
+    
+    public T read(Object context, StaxReader reader) throws XMLStreamException;
+    
+    public T readEntry(Object context, StaxReader reader) throws XMLStreamException;
     
 }

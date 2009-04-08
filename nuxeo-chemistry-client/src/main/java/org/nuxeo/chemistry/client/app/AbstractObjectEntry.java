@@ -30,7 +30,7 @@ import org.apache.chemistry.property.Property;
  *
  */
 @SuppressWarnings("unchecked")
-public abstract class AbstractObjectEntry implements ObjectEntry {
+public abstract class AbstractObjectEntry extends APPObject implements ObjectEntry {
 
     public Serializable getValue(String name, Serializable defaultValue) {
         Serializable value = getValue(name);

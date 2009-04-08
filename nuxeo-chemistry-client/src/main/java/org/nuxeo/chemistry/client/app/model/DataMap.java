@@ -18,9 +18,11 @@ package org.nuxeo.chemistry.client.app.model;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 /**
+ * Map implementation to store lazy parsed values (from XML strings). 
+ * This is internal to the object implementation and must not be used by the user.  
+ *  
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
@@ -36,12 +38,15 @@ public class DataMap {
         return null;
     }
     
+    @SuppressWarnings("unchecked")
     public void set(String key, Object value) {
         Value<Object> v = map.get(key);
         if (v != null) {
             v.set(value);
+        } else {
+            Value<Object> val = (Value<Object>)ValueFactory.createValue(value);
+            map.put(key, val);            
         }
-        throw new NoSuchElementException("No such element in map: "+key);
     }
     
     public String[] getKeys() {

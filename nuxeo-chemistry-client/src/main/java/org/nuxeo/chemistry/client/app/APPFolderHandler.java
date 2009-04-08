@@ -23,8 +23,7 @@ import java.util.List;
 
 import javax.xml.stream.XMLStreamException;
 
-import org.nuxeo.chemistry.client.app.xml.CmisEntryReader;
-import org.nuxeo.chemistry.client.app.xml.CmisFeedReader;
+import org.nuxeo.chemistry.client.app.xml.CmisFolderReader;
 
 
 
@@ -32,30 +31,24 @@ import org.nuxeo.chemistry.client.app.xml.CmisFeedReader;
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
-public class APPObjectEntryHandler implements SerializationHandler<APPObjectEntry> {
-    
+public class APPFolderHandler implements SerializationHandler<APPFolder> {
+
     public String getContentType() {
         return "application/atom+xml"; //TODO
     }
 
-    public Class<APPObjectEntry> getObjectType() {
-        return APPObjectEntry.class;
+    public Class<APPFolder> getObjectType() {
+        return APPFolder.class;
     }
 
-    public List<APPObjectEntry> readFeed(Object context, InputStream in)  throws IOException {
-        try {
-            return CmisFeedReader.INSTANCE.read(context, in);
-        } catch (XMLStreamException e) {
-            IOException ioe = new IOException("Failed to read feed");
-            ioe.initCause(e);
-            throw ioe;
-        }
+    public List<APPFolder> readFeed(Object context, InputStream in)  throws IOException {
+        throw new UnsupportedOperationException("Operation not supported");
     }
 
-    public APPObjectEntry readEntity(Object context, InputStream in)
+    public APPFolder readEntity(Object context, InputStream in)
             throws IOException {
         try {
-            return CmisEntryReader.INSTANCE.read(context, in);
+            return (APPFolder)CmisFolderReader.INSTANCE.read(context, in);
         } catch (XMLStreamException e) {
             IOException ioe = new IOException("Failed to read feed");
             ioe.initCause(e);
@@ -63,9 +56,8 @@ public class APPObjectEntryHandler implements SerializationHandler<APPObjectEntr
         }
     }
 
-    public void writeEntity(APPObjectEntry object, OutputStream out)
+    public void writeEntity(APPFolder object, OutputStream out)
             throws IOException {
         throw new UnsupportedOperationException("Not yet implemented");
     }
-
 }

@@ -16,31 +16,32 @@
  */
 package org.nuxeo.chemistry.client.app.xml;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
-import javax.xml.stream.XMLStreamConstants;
-import javax.xml.stream.XMLStreamException;
-
+import org.nuxeo.chemistry.client.app.APPType;
 import org.nuxeo.chemistry.client.common.xml.StaxReader;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
-public interface FeedReader<T> extends XMLStreamConstants, ATOM {
-    
-    public T read(Object context, URL url) throws XMLStreamException, IOException;
-    
-    public T read(Object context, File file) throws XMLStreamException, IOException;
-    
-    public T read(Object context, InputStream in) throws XMLStreamException;
-    
-    public T read(Object context, Reader reader) throws XMLStreamException;
-    
-    public T read(Object context, StaxReader reader) throws XMLStreamException;
+public class TypeFeedReader extends AbstractFeedReader<Map<String,APPType>, APPType> {
 
+    public final static TypeFeedReader INSTANCE = new TypeFeedReader();  
+    
+    public TypeFeedReader() {
+        super(TypeEntryReader.INSTANCE);
+    }
+    
+    @Override
+    protected void addEntry(Map<String,APPType> feed, APPType entry) {
+        feed.put(entry.getId(), entry);
+    }
+
+    @Override
+    protected Map<String,APPType> newFeed(Object context, StaxReader reader) {
+        return new HashMap<String,APPType>();
+    }
+    
 }

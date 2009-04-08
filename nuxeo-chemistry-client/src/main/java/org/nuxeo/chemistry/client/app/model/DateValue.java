@@ -17,6 +17,7 @@
 package org.nuxeo.chemistry.client.app.model;
 
 import java.util.Calendar;
+import java.util.Date;
 
 import org.nuxeo.chemistry.client.common.DateParser;
 
@@ -69,6 +70,19 @@ public class DateValue extends Value<Calendar> {
     @Override
     public Class<?> getType() {
         return Calendar.class;
+    }
+
+    public static DateValue fromDate(Date value) {
+        DateValue v = new DateValue();
+        v.value = Calendar.getInstance();
+        v.value.setTime(value);
+        return v;
+    }
+    
+    public static DateValue fromCalendar(Calendar value) {
+        DateValue v = new DateValue();
+        v.value = value;
+        return v;
     }
     
 }

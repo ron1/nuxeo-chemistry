@@ -54,5 +54,11 @@ public class BooleanValue extends Value<Boolean> {
     public Class<?> getType() {
         return Boolean.class;
     }
-    
+
+    public static BooleanValue fromBoolean(Boolean value) {
+        BooleanValue v = new BooleanValue();
+        v.value = value;
+        return v;
+    }
+
 }

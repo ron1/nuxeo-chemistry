@@ -19,9 +19,13 @@ package org.nuxeo.chemistry.client.app.test;
 import java.util.List;
 
 import org.apache.chemistry.Connection;
+import org.apache.chemistry.Document;
+import org.apache.chemistry.Folder;
 import org.apache.chemistry.ObjectEntry;
 import org.apache.chemistry.repository.Repository;
+import org.apache.chemistry.type.Type;
 import org.nuxeo.chemistry.client.app.APPContentManager;
+import org.nuxeo.chemistry.client.app.APPType;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
@@ -66,8 +70,18 @@ public class Test {
             System.out.println(">> "+entry.getName()+" ["+entry.getTypeId()+"] - "+entry.getId());
         }
         
-        System.out.println(">>> done in "+((System.currentTimeMillis()-s)/1000)+" sec.");
+        System.out.println(">>> traversal done in "+((System.currentTimeMillis()-s)/1000)+" sec.");
 
+        
+        Type type = last.getType();
+        System.out.println("Section type: "+type+" - "+((APPType)type).isFolder());
+        
+        s = System.currentTimeMillis();
+        Document doc = last.getDocument();
+        Folder folder = (Folder)doc;
+        System.out.println("author: "+folder.getCreatedBy());
+        System.out.println(">>> doc fetched in "+((System.currentTimeMillis()-s)/1000)+" sec.");
+        
         //entry =  entry.getChild("default-domain");
       
 

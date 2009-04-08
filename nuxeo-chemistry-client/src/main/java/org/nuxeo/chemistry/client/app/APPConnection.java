@@ -83,7 +83,7 @@ public class APPConnection implements Connection {
             //props.put(Property.NAME, "Root");
             map.put(Property.ID, new StringValue(repository.info.getRootFolderId()));
             map.put(Property.NAME, new StringValue("Root"));
-            APPObjectEntry entry = new APPObjectEntry(map);
+            APPObjectEntry entry = new APPObjectEntry(this, map);
             //TODO the URL to the root itself ... this need to be fixed
             // a way is to get the root children feed and use the self link
             // for now we hard-code logic
@@ -103,6 +103,7 @@ public class APPConnection implements Connection {
         return ((APPObjectEntry)entry).getLink(rel);
     }
     
+    @SuppressWarnings("unchecked")
     public List<ObjectEntry> getChildren(ObjectEntry folder) {
         String href = getEntryLink(folder, CMIS.LINK_CHILDREN);
         Request req = new Request(href);

@@ -16,6 +16,10 @@
  */
 package org.nuxeo.chemistry.client.app.model;
 
+import java.math.BigDecimal;
+import java.net.URI;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.NoSuchElementException;
 
 
@@ -26,8 +30,30 @@ import java.util.NoSuchElementException;
 public class ValueFactory {
 
     public static Value<?> createValue(Object o) {
-        
-        return null;
+        Class<?> clazz = o.getClass();
+        if (clazz == String.class) {
+            return StringValue.fromString((String)o);
+        } else if (clazz == Boolean.class) {
+            return BooleanValue.fromBoolean((Boolean)o);
+        } else if (clazz == URI.class) {
+            return URIValue.fromURI((URI)o);        
+        } else if (clazz == Calendar.class) {
+            return DateValue.fromCalendar((Calendar)o);
+        } else if (clazz == Date.class) {
+            return DateValue.fromDate((Date)o);
+        } else if (clazz == BigDecimal.class) {
+          return DecimalValue.fromDecimal((BigDecimal)o);
+        } else if (Number.class.isAssignableFrom(clazz)) {
+            return IntegerValue.fromNumber((Number)o);
+//TODO
+//        } else if (clazz == XmlText.class) {
+//            //TODO
+//        } else if (clazz == HtmlText.class) {
+//          //TODO
+//        } else if (clazz == Id.class) {
+//          //TODO            
+        }
+        throw new UnsupportedOperationException("Not yet implemented");
     }
 
     public static Value<?> createValue(String id, String value) {

@@ -29,18 +29,14 @@ import org.nuxeo.chemistry.client.common.xml.StaxReader;
 public class CmisFeedReader extends AbstractFeedReader<List<APPObjectEntry>, APPObjectEntry> {
 
     
-    private static CmisFeedReader instance = new CmisFeedReader();
+    public static final CmisFeedReader INSTANCE = new CmisFeedReader();
     
-    public static CmisFeedReader getInstance() {
-        return instance;
-    }
-
     public CmisFeedReader() {
-        super (new CmisEntryReader());
+        super (CmisEntryReader.INSTANCE);
     }
 
     @Override
-    public List<APPObjectEntry> newFeed(StaxReader reader) {
+    public List<APPObjectEntry> newFeed(Object context, StaxReader reader) {
         return new ArrayList<APPObjectEntry>();
     }
 

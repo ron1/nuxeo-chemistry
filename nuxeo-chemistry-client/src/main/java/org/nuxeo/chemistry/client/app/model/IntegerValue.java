@@ -17,6 +17,7 @@
 package org.nuxeo.chemistry.client.app.model;
 
 
+
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
@@ -62,5 +63,11 @@ public class IntegerValue extends Value<Integer> {
     public Class<?> getType() {
         return Integer.class;
     }
-    
+
+    public static IntegerValue fromNumber(Number value) {
+        IntegerValue v = new IntegerValue();
+        v.value = new Integer(value.intValue());
+        return v;
+    }
+
 }

@@ -52,5 +52,8 @@ public class StringValue extends Value<String> {
     public Class<?> getType() {
         return String.class;
     }
-    
+
+    public static StringValue fromString(String value) {
+        return new StringValue(value);
+    }
 }

@@ -74,6 +74,9 @@ public class APPContentManager implements ContentManager {
     protected void initializeHandlers() {
         registerSerializationHandler(new APPServiceDocumentHandler());
         registerSerializationHandler(new APPObjectEntryHandler());
+        //registerSerializationHandler(new APPDocumentHandler());
+        //registerSerializationHandler(new APPFolderHandler());
+        //registerSerializationHandler(new TypeHandler());
     }
     
     protected AdapterManager createAdapterManager() {

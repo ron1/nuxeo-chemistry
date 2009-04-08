@@ -19,10 +19,8 @@ package org.nuxeo.chemistry.client.app;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.chemistry.Document;
@@ -44,9 +42,8 @@ import org.nuxeo.chemistry.client.app.model.DataMap;
  */
 public class APPObjectEntry extends AbstractObjectEntry {
 
-    protected APPConnection connection;
-        
-    protected List<String> links;
+    protected APPConnection connection;    
+    
     protected URI uri;
     protected String id;
     protected String name;
@@ -61,52 +58,26 @@ public class APPObjectEntry extends AbstractObjectEntry {
     /**
      * For internal use - clients must use the other constructor.
      */
-    public APPObjectEntry() {
-        this (null);
+    public APPObjectEntry(APPConnection connection) {
+        this (connection, null);
     }
 
-    public APPObjectEntry(DataMap properties) {
-        links = new ArrayList<String>();
+    public APPObjectEntry(APPConnection connection, DataMap properties) {
+        this.connection = connection;
         init(properties);
     }
-
+    
     public void init(DataMap map) {
         this.map = map;
     }
-    
-    public void attach(APPConnection connection) {
-        this.connection = connection;
-    }
-    
-    public void detach() {
-        this.connection = null;
+
+    @Override
+    public Connector getConnector() {
+        return connection.connector;
     }
     
     public APPConnection getConnection() {
         return connection;
-    }
-    
-    
-    public void pack() {
-        //??
-    }
-        
-    public void addLink(String rel, String href) {
-        links.add(rel == null ? "" : rel);
-        links.add(href);
-    }
-
-    public String[] getLinks() {
-       return links.toArray(new String[links.size()]);  
-    }
-    
-    public String getLink(String rel) {
-        for (int i=0, len=links.size(); i<len; i+=2) {
-            if (rel.equals(links.get(i))) {
-                return links.get(i+1);
-            }
-        }
-        return null;
     }
     
     public Serializable getValue(String name) {
@@ -172,17 +143,16 @@ public class APPObjectEntry extends AbstractObjectEntry {
         return lastModificationDate;
     }
         
-    
     public Type getType() {
-        throw new UnsupportedOperationException("Not yet implemented");
+        return connection.getRepository().getType(typeId);
     }
     
     public Document getDocument() {
-        throw new UnsupportedOperationException("Not yet implemented");
+        return getLinkedEntity("edit", APPDocument.class);
     }
     
     public Folder getFolder() {
-        throw new UnsupportedOperationException("Not yet implemented");
+        return getLinkedEntity("edit", APPFolder.class);
     }
 
     public Policy getPolicy() {
