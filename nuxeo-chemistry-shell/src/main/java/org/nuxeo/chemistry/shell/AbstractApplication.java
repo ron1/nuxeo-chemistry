@@ -22,8 +22,6 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.swing.text.Segment;
-
 import org.nuxeo.chemistry.client.common.Path;
 import org.nuxeo.chemistry.shell.command.CommandRegistry;
 

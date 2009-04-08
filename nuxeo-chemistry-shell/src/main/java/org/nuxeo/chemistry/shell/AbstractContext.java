@@ -17,9 +17,6 @@
 package org.nuxeo.chemistry.shell;
 
 import org.nuxeo.chemistry.client.common.Path;
-import org.nuxeo.chemistry.shell.console.ColorHelper;
-
-import sun.beans.editors.ColorEditor;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
