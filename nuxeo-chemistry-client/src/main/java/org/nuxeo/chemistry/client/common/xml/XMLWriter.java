@@ -43,6 +43,7 @@ import java.util.TimeZone;
 import javax.xml.namespace.QName;
 
 import org.apache.chemistry.atompub.CMIS;
+import org.nuxeo.chemistry.client.common.DateParser;
 
 /**
  * This file contains code from org.apache.commons.betwixt.XMLUtils
@@ -52,22 +53,26 @@ import org.apache.chemistry.atompub.CMIS;
  */
 public class XMLWriter {
 
-	protected static String CRLF = System.getProperty("line.separator");
-	
+
+    protected static String CRLF = System.getProperty("line.separator");
+    
     protected int indent;
     protected Writer writer;    
     protected String crlf;
     protected boolean emitHeader = true;
+    protected String encoding;
     
+    protected ArrayList<String> globalNsMap;
     protected Element element; //current element
     protected int depth = -1;
+
     
     public XMLWriter(Writer writer) {
         this (writer, 0);
     }
     
     public XMLWriter(Writer writer, int indent) {
-    	this (writer, indent, CRLF);
+        this (writer, indent, CRLF);
     }
     
     public XMLWriter(Writer writer, int indent, String crlf) {
@@ -76,37 +81,67 @@ public class XMLWriter {
         this.crlf = crlf;
     }
     
+    public void setEncoding(String encoding) {
+        this.encoding = encoding;
+    }
+    
+    public String getEncoding() {
+        return encoding;
+    }
+    
+    public void putXmlns(String uri) {
+        putXmlns("", uri);
+    }
+    public void putXmlns(String prefix, String uri) {
+        if (globalNsMap == null) {
+            globalNsMap = new ArrayList<String>();
+        }
+        globalNsMap.add(uri);
+        globalNsMap.add(prefix);
+    }
+    
+    public String getXmlNs(String uri) {
+        if (globalNsMap != null) {
+            for (int i=0,len=globalNsMap.size(); i<len; i+=2) {
+                if (uri.equals(globalNsMap.get(i))) {
+                    return globalNsMap.get(i+1);
+                }
+            }
+        }
+        return null;
+    }
+
     public void setIndent(int indent) {
-		this.indent = indent;
-	}
+        this.indent = indent;
+    }
     
     public int getIndent() {
-		return indent;
-	}
+        return indent;
+    }
     
     public void setCRLF(String crlf) {
-		this.crlf = crlf;
-	}
+        this.crlf = crlf;
+    }
     
     public String getCRLF() {
-		return crlf;
-	}
+        return crlf;
+    }
     
     public void setWriter(Writer writer) {
-		this.writer = writer;
-	}
+        this.writer = writer;
+    }
     
     public Writer getWriter() {
-		return writer;
-	}
+        return writer;
+    }
     
     public void setEmitHeader(boolean emitHeader) {
-		this.emitHeader = emitHeader;
-	}
+        this.emitHeader = emitHeader;
+    }
     
     public boolean isEmitHeader() {
-		return emitHeader;
-	}
+        return emitHeader;
+    }
     
     public void flush() throws IOException {
         writer.flush();
@@ -142,9 +177,25 @@ public class XMLWriter {
             pop();
             writer.write("/>");            
         }        
-        push(name); // push myself to the stack
         indent("<");
         writer.write(name);
+        if (element == null) { // the first element - write any global ns
+            if (globalNsMap != null) {
+                for (int i=0,len=globalNsMap.size(); i<len; i+=2) {
+                    String prefix = globalNsMap.get(i+1);
+                    String uri = globalNsMap.get(i);
+                    writer.write(" xmlns");
+                    if (prefix != null  && prefix.length() > 0) {
+                        writer.write(":");
+                        writer.write(prefix);
+                    }
+                    writer.write("=\"");
+                    writer.write(uri);
+                    writer.write("\"");
+                }
+            }
+        }
+        push(name); // push myself to the stack
         return this;
     }    
 
@@ -152,7 +203,11 @@ public class XMLWriter {
         depth++;
         if (element == null) { // the root
             if (emitHeader) {
-                writer.write("<?xml version=\"1.0\"?>");
+                if (encoding != null) {
+                    writer.write("<?xml version=\"1.0\" encoding="+encoding+"?>");
+                } else {
+                    writer.write("<?xml version=\"1.0\"?>");
+                }
                 writer.write(crlf);
             }            
         } else {
@@ -191,11 +246,16 @@ public class XMLWriter {
     }
 
     public XMLWriter econtent(String text) throws IOException {
-    	return content(escapeBodyValue(text));
+        return content(escapeBodyValue(text));
     }
 
     public XMLWriter content(boolean value) throws IOException {
         return content(value ? "true" : "false");
+    }
+    
+
+    public XMLWriter content(Date value) throws IOException {
+        return content(DateParser.formatW3CDateTime(value));
     }
 
     public XMLWriter text(String text) throws IOException {
@@ -204,7 +264,7 @@ public class XMLWriter {
     }
 
     public XMLWriter etext(String text) throws IOException {
-    	return text(escapeBodyValue(text));
+        return text(escapeBodyValue(text));
     }
     
     public XMLWriter attr(String name, Object value) throws IOException {
@@ -217,7 +277,7 @@ public class XMLWriter {
     }
 
     public XMLWriter eattr(String name, Object value) throws IOException {
-    	return attr(name, escapeAttributeValue(value));
+        return attr(name, escapeAttributeValue(value));
     }
 
     public XMLWriter xmlns(String value) throws IOException {
@@ -287,20 +347,24 @@ public class XMLWriter {
         return attr(name, value.toString());
     }
     
-    
-    
     public String resolve(QName name) {
-        if (element != null) {
-            String prefix = element.getXmlNs(name.getNamespaceURI());
+        String prefix = null;
+        String uri = name.getNamespaceURI();
+        if (element != null) {            
+            prefix = element.getXmlNs(uri);
             if (prefix == null) {
-                return name.toString();
+                prefix = getXmlNs(uri);
             }
-            if (prefix.length() == 0) {
-                return name.getLocalPart();
-            }
-            return prefix+":"+name.getLocalPart();
+        } else {
+            prefix = getXmlNs(uri);
+        }        
+        if (prefix == null) {   
+            return name.toString();
         }
-        return name.toString();
+        if (prefix.length() == 0) {
+            return name.getLocalPart();
+        }
+        return prefix+":"+name.getLocalPart();
     }
     
     public XMLWriter element(QName name) throws IOException {

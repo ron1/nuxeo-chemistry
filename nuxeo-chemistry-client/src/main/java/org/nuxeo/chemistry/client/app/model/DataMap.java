@@ -16,8 +16,12 @@
  */
 package org.nuxeo.chemistry.client.app.model;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.chemistry.atompub.CMIS;
+import org.nuxeo.chemistry.client.common.xml.XMLWriter;
 
 /**
  * Map implementation to store lazy parsed values (from XML strings). 
@@ -66,4 +70,20 @@ public class DataMap {
     public void put(String key, Value<?> value) {
         map.put(key, (Value<Object>)value);
     }
+    
+
+    public void writeTo(XMLWriter xw) throws IOException {
+        xw.element(CMIS.PROPERTIES).start();
+        
+        for (Map.Entry<String, Value<Object>> entry : map.entrySet()) {
+            Value<Object> val = entry.getValue();
+            xw.element(val.getCmisTagName()).attr(CMIS.NAME, entry.getKey()).start()
+                .element(CMIS.VALUE).content(val.getXML())
+            .end();
+            entry.getKey();
+        }
+        
+        xw.end();
+    }
+    
 }

@@ -42,6 +42,7 @@ import org.apache.chemistry.ReturnVersion;
 import org.apache.chemistry.SPI;
 import org.apache.chemistry.Unfiling;
 import org.apache.chemistry.VersioningState;
+import org.apache.chemistry.property.Property;
 import org.apache.chemistry.repository.Repository;
 import org.apache.chemistry.type.BaseType;
 import org.apache.chemistry.type.Type;
@@ -52,6 +53,7 @@ import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentModelList;
 import org.nuxeo.ecm.core.api.IdRef;
+import org.nuxeo.ecm.core.chemistry.BuiltinProperties;
 
 /**
  * Nuxeo CMIS Connection wrapper.
@@ -149,6 +151,20 @@ public class NuxeoConnection implements Connection, SPI {
         if (folder != null) {
             doc.setPathInfo(((NuxeoObjectEntry) folder).doc.getPathAsString(),
                     "");
+        }
+        return doc;
+    }
+
+    private DocumentModel createDoc(String typeId, String name, ObjectEntry folder) {
+        DocumentModel doc;
+        try {
+            doc = session.createDocumentModel(typeId);
+        } catch (ClientException e) {
+            throw new IllegalArgumentException(typeId);
+        }
+        if (folder != null) {
+            doc.setPathInfo(((NuxeoObjectEntry) folder).doc.getPathAsString(),
+                    name);
         }
         return doc;
     }
@@ -260,14 +276,28 @@ public class NuxeoConnection implements Connection, SPI {
     public String createDocument(String typeId,
             Map<String, Serializable> properties, String folderId,
             ContentStream contentStream, VersioningState versioningState) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+        try {
+            ObjectEntry entry = getObject(folderId, ReturnVersion.THIS);
+            DocumentModel doc = createDoc(typeId, (String)properties.get(Property.NAME), entry);
+            //TODO path seted by createDoc is incorrect
+            for (Map.Entry<String,Serializable> pe : properties.entrySet()) {
+                if (!BuiltinProperties.isBuiltin(pe.getKey())) {
+                    doc.setPropertyValue(pe.getKey(), pe.getValue());
+                }
+            }
+            doc = session.createDocument(doc);
+            session.save(); //TODO remove this?
+            // TODO content stream
+            // TODO versioning
+            return doc.getId();
+        } catch (Exception e) { //TODO handle this
+            throw new RuntimeException(e);
+        }
     }
 
     public String createFolder(String typeId,
             Map<String, Serializable> properties, String folderId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+        return createDocument(typeId, properties, folderId, null, VersioningState.CHECKED_OUT);
     }
 
     public String createRelationship(String typeId,
@@ -391,13 +421,16 @@ public class NuxeoConnection implements Connection, SPI {
     }
 
     public void deleteObject(String objectId) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+        try {
+            session.removeDocument(new IdRef(objectId));
+            session.save(); //TODO remove this?
+        } catch (Exception e) { //TODO how to handle exceptions
+            throw new RuntimeException(e);
+        }
     }
 
     public void deleteObject(ObjectEntry object) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+        deleteObject(object.getId());
     }
 
     public Collection<String> deleteTree(String folderId, Unfiling unfiling,

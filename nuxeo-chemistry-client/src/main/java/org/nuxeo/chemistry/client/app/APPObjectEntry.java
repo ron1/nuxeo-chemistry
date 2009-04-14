@@ -71,6 +71,14 @@ public class APPObjectEntry extends AbstractObjectEntry {
         this.map = map;
     }
 
+    /**
+     * To be used only internally by serializers
+     * @return
+     */
+    public DataMap getDataMap() {
+        return map;
+    }
+    
     @Override
     public Connector getConnector() {
         return connection.connector;
@@ -86,7 +94,7 @@ public class APPObjectEntry extends AbstractObjectEntry {
 
     public URI getURI() {
         if (uri == null) {
-            String value = getLink("edit");
+            String value = getEditLink();
             if (uri == null) {
                 value = getLink("self");
                 if (uri == null) {
@@ -112,9 +120,6 @@ public class APPObjectEntry extends AbstractObjectEntry {
     public String getId() {
         if (id == null) {
             id = getString(Property.ID);
-            if (id == null) {
-                throw new IllegalArgumentException("A CMIS Object without ID");  
-            }
         }
         return id;
     }
@@ -144,15 +149,15 @@ public class APPObjectEntry extends AbstractObjectEntry {
     }
         
     public Type getType() {
-        return connection.getRepository().getType(typeId);
+        return connection.getRepository().getType(getTypeId());
     }
     
     public Document getDocument() {
-        return getLinkedEntity("edit", APPDocument.class);
+        return getRemoteEntity(getEditLink(), APPDocument.class);
     }
     
     public Folder getFolder() {
-        return getLinkedEntity("edit", APPFolder.class);
+        return getRemoteEntity(getEditLink(), APPFolder.class);
     }
 
     public Policy getPolicy() {

@@ -66,7 +66,7 @@ public class HttpClientConnector implements Connector {
             if (len > 0) {
                 NameValuePair[] qs = new NameValuePair[len];
                 for (int i=0, k=0; i<len; i++,k+=2) {
-                    qs[i] =  new NameValuePair(params.get(k), params.get(k));
+                    qs[i] =  new NameValuePair(params.get(k), params.get(k+1));
                 }
                 method.setQueryString(qs);
             }
@@ -78,7 +78,7 @@ public class HttpClientConnector implements Connector {
         if (headers != null) {
             int len=headers.size();
             for (int k=0; k<len; k+=2) {
-                method.addRequestHeader(headers.get(k), headers.get(k));
+                method.addRequestHeader(headers.get(k), headers.get(k+1));
             }
         }
     }

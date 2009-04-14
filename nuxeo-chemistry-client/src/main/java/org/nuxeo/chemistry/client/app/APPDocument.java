@@ -26,6 +26,7 @@ import org.apache.chemistry.Document;
 import org.apache.chemistry.Folder;
 import org.apache.chemistry.atompub.CMIS;
 import org.apache.chemistry.property.Property;
+import org.nuxeo.chemistry.client.ContentManagerException;
 import org.nuxeo.chemistry.client.app.model.DataMap;
 
 /**
@@ -64,6 +65,9 @@ public class APPDocument extends APPObjectEntry implements Document {
 
     @Override
     public Folder getFolder() {
+        if (this instanceof Folder) {
+            return (Folder)this;
+        }
         throw new UnsupportedOperationException("Not a folder"); 
     }
     
@@ -72,7 +76,45 @@ public class APPDocument extends APPObjectEntry implements Document {
     }
     
     public void save() {
-        throw new UnsupportedOperationException("Not yet implemented");
+        try {
+            if (getId() == null) {
+                create();
+            } else {
+                update();
+            }
+        } catch (ContentManagerException e) { //TODO
+            throw new RuntimeException(e);
+        }
+    }
+    
+    protected void create() throws ContentManagerException {
+        String href = getLink(CMIS.LINK_PARENT);
+        if (href == null) {
+           throw new IllegalArgumentException("Cannot create entry: no 'cmis-parent' link is present"); 
+        }
+        Request req = new Request(href);
+        req.setContent(this);
+        req.setHeader("Content-Type", "application/atom+xml;type=entry");
+        Response resp = getConnector().post(req);
+        if (!resp.isOk()) {
+            throw new ContentManagerException("Remote server returned error code: "+resp.getStatusCode());
+        }        
+        //TODO get the response to update the content of the posted document 
+        //resp.getEntity(get, APPDocument.class);
+    }
+
+    protected void update() throws ContentManagerException {
+        String href = getEditLink();
+        if (href == null) {
+           throw new IllegalArgumentException("Cannot edit entry: no 'edit' link is present"); 
+        }
+        Request req = new Request(href);
+        req.setContent(this);
+        req.setHeader("Content-Type", "application/atom+xml;type=entry");
+        Response resp = getConnector().put(req);
+        if (!resp.isOk()) {
+            throw new ContentManagerException("Remote server returned error code: "+resp.getStatusCode());
+        }                
     }
 
     public ContentStream getContentStream() {

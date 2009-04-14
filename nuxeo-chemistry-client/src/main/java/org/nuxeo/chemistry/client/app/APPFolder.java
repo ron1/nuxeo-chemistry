@@ -17,11 +17,11 @@
 package org.nuxeo.chemistry.client.app;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.apache.chemistry.Document;
 import org.apache.chemistry.Folder;
 import org.apache.chemistry.ObjectEntry;
+import org.apache.chemistry.atompub.CMIS;
 import org.apache.chemistry.property.Property;
 import org.apache.chemistry.type.BaseType;
 import org.nuxeo.chemistry.client.app.model.DataMap;
@@ -53,18 +53,20 @@ public class APPFolder extends APPDocument implements Folder {
     public Document newDocument(String typeId) {
         APPDocument doc = new APPDocument(connection);
         DataMap map = new DataMap();
-        map.set(Property.ID, "TransientDoc#"+UUID.randomUUID().toString());
         map.set(Property.TYPE_ID, typeId);
-        doc.init(new DataMap());
+        map.set(Property.PARENT_ID, getId());
+        doc.init(map);
+        doc.addLink(CMIS.LINK_PARENT, getEditLink());
         return doc;
     }
 
     public Folder newFolder(String typeId) {
         APPFolder doc = new APPFolder(connection);
         DataMap map = new DataMap();
-        map.set(Property.ID, "TransientDoc#"+UUID.randomUUID().toString());
         map.set(Property.TYPE_ID, typeId);
-        doc.init(new DataMap());
+        map.set(Property.PARENT_ID, getId());
+        doc.init(map);
+        doc.addLink(CMIS.LINK_PARENT, getEditLink());
         return doc;
     }
 

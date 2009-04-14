@@ -21,6 +21,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.xml.namespace.QName;
+
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
@@ -29,6 +31,8 @@ public abstract class Value<T> {
 
     
     public Value<T> next;
+    
+    public abstract QName getCmisTagName();
     
     public abstract Class<?> getType();
     

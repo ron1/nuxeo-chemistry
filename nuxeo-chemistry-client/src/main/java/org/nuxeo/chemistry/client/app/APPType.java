@@ -173,7 +173,7 @@ public class APPType extends APPObject implements Type {
     protected void loadPropertyDef() {
         if (propertyDefs == null) {
             if (true) throw new UnsupportedOperationException("Not yet implemented");
-            APPType typeDef = getLinkedEntity("edit", APPType.class);
+            APPType typeDef = getRemoteEntity(getEditLink(), APPType.class);
             propertyDefs = typeDef.propertyDefs;
             //TODO
         }

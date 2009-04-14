@@ -23,9 +23,11 @@ import org.apache.chemistry.Document;
 import org.apache.chemistry.Folder;
 import org.apache.chemistry.ObjectEntry;
 import org.apache.chemistry.repository.Repository;
+import org.apache.chemistry.type.BaseType;
 import org.apache.chemistry.type.Type;
 import org.nuxeo.chemistry.client.app.APPContentManager;
 import org.nuxeo.chemistry.client.app.APPType;
+import org.nuxeo.chemistry.client.app.Navigator;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
@@ -35,81 +37,68 @@ public class Test {
 
     public static void main(String[] args) throws Exception {        
         double s = System.currentTimeMillis();
-//        Abdera.getInstance().getConfiguration().addExtensionFactory(
-//                new CmisExtensionFactory());
         s = System.currentTimeMillis();
 
 
         APPContentManager cm = new APPContentManager("http://localhost:8080/cmis");
 
-//        APPFeedService.install(cm);
-        
         Repository repo = cm.getDefaultRepository();
         Connection conn = repo.getConnection(null);
         
-        ObjectEntry root = conn.getRootEntry();
-        List<ObjectEntry> entries = conn.getChildren(root);
+//        ObjectEntry root = conn.getRootEntry();
+//        List<ObjectEntry> entries = conn.getChildren(root);
+//        
+//        ObjectEntry last = null;
+//        for (ObjectEntry entry : entries) {
+//            System.out.println(">> "+entry.getName()+" ["+entry.getTypeId()+"] - "+entry.getId());
+//        }
+//        last = entries.get(0);
+//        entries = conn.getChildren(last);
+//
+//        System.out.println("--------------------------------");        
+//        for (ObjectEntry entry : entries) {
+//            last = entry;
+//            System.out.println(">> "+entry.getName()+" ["+entry.getTypeId()+"] - "+entry.getId());
+//        }
+//        last = entries.get(0);
+//        entries = conn.getChildren(last);
+//        System.out.println("--------------------------------");
+//        for (ObjectEntry entry : entries) {
+//            last = entry;
+//            System.out.println(">> "+entry.getName()+" ["+entry.getTypeId()+"] - "+entry.getId());
+//        }
+//        
+//        System.out.println(">>> traversal done in "+((System.currentTimeMillis()-s)/1000)+" sec.");
+//
+//        
+//        Type type = last.getType();
+//        System.out.println("Section type: "+type+" - "+((APPType)type).isFolder());
+//        
+//        s = System.currentTimeMillis();
+//        Document doc = last.getDocument();
+//        Folder folder = (Folder)doc;
+//        System.out.println("author: "+folder.getCreatedBy());
+//        System.out.println(">>> doc fetched in "+((System.currentTimeMillis()-s)/1000)+" sec.");
         
-        ObjectEntry last = null;
-        for (ObjectEntry entry : entries) {
-            System.out.println(">> "+entry.getName()+" ["+entry.getTypeId()+"] - "+entry.getId());
-        }
-        last = entries.get(0);
-        entries = conn.getChildren(last);
-
-        System.out.println("--------------------------------");        
-        for (ObjectEntry entry : entries) {
-            last = entry;
-            System.out.println(">> "+entry.getName()+" ["+entry.getTypeId()+"] - "+entry.getId());
-        }
-        last = entries.get(0);
-        entries = conn.getChildren(last);
-        System.out.println("--------------------------------");
-        for (ObjectEntry entry : entries) {
-            last = entry;
-            System.out.println(">> "+entry.getName()+" ["+entry.getTypeId()+"] - "+entry.getId());
-        }
+//        Folder f = folder.newFolder("Folder");
+//        f.setName("some_folder");
+//        f.setValue("dc:title", "My Folder");        
+//        f.save();
         
-        System.out.println(">>> traversal done in "+((System.currentTimeMillis()-s)/1000)+" sec.");
-
-        
-        Type type = last.getType();
-        System.out.println("Section type: "+type+" - "+((APPType)type).isFolder());
-        
+        Navigator nav = new Navigator(conn);
         s = System.currentTimeMillis();
-        Document doc = last.getDocument();
-        Folder folder = (Folder)doc;
-        System.out.println("author: "+folder.getCreatedBy());
-        System.out.println(">>> doc fetched in "+((System.currentTimeMillis()-s)/1000)+" sec.");
+        ObjectEntry entry = nav.resolve("/default-domain/workspaces/mysec/some_folder");
+        System.out.println(">>> doc fetched by path in "+((System.currentTimeMillis()-s)/1000)+" sec.");
+        System.out.println("entry title: "+entry.getString("dc:title"));
+//        conn.deleteObject(entry);
         
-        //entry =  entry.getChild("default-domain");
-      
-
+        System.out.println(">>>>> "+repo.getType("Folder"));
+        Document doc = entry.getDocument();
+        doc.setValue("dc:title", "My Modified Title");
+        doc.save();
         
-//      Connection conn = repo.getConnection(null);
-//        FeedService feedsvc = repo.getExtension(FeedService.class);
-//        Feed<FeedDescriptor> feeds = feedsvc.getFeeds();
-//        System.out.println("Remote Feeds: ");
-//        for (FeedDescriptor fd : feeds.getEntries()) {
-//            System.out.println(fd.getTitle()+" - "+fd.getUrl());
-//        }
-//
-//        FeedDescriptor fd = feeds.getEntries().get(0);
-//        Feed<ObjectEntry> docs = fd.query();
-//
-//        int i = 1;
-//        System.out.println("### Docs in '"+fd.getTitle()+"'");
-//        for (ObjectEntry entry :  docs.getEntries()) {
-//            System.out.println(i+". "+entry.getName());
-//            i++;
-//        }
-
-
-
-
-//        Document doc = entry.getDocument();
-//
-//        NewsItem ni = entry.getDocument(NewsItem.class);
+        entry = nav.resolve("/default-domain/workspaces/mysec/some_folder");        
+        System.out.println("entry modif title: "+entry.getString("dc:title"));
 
     }
 

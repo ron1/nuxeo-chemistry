@@ -19,6 +19,9 @@ package org.nuxeo.chemistry.client.app.model;
 import java.util.Calendar;
 import java.util.Date;
 
+import javax.xml.namespace.QName;
+
+import org.apache.chemistry.atompub.CMIS;
 import org.nuxeo.chemistry.client.common.DateParser;
 
 /**
@@ -40,6 +43,11 @@ public class DateValue extends Value<Calendar> {
     public DateValue(String value) {
         this.raw = value;
     }
+    
+    @Override
+    public QName getCmisTagName() {
+        return CMIS.PROPERTY_DATETIME;
+    }    
     
     public String getXML() {
         if (raw == null) {

@@ -18,6 +18,10 @@ package org.nuxeo.chemistry.client.app.model;
 
 import java.net.URI;
 
+import javax.xml.namespace.QName;
+
+import org.apache.chemistry.atompub.CMIS;
+
 /**
  * TODO use URI ?
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
@@ -34,6 +38,11 @@ public class URIValue extends Value<String> {
         this.value = value;
     }
     
+    @Override
+    public QName getCmisTagName() {
+        return CMIS.PROPERTY_URI;
+    }
+        
     public void set(String value) {
         this.value = value;
     }

@@ -18,6 +18,10 @@ package org.nuxeo.chemistry.client.app.model;
 
 import java.math.BigDecimal;
 
+import javax.xml.namespace.QName;
+
+import org.apache.chemistry.atompub.CMIS;
+
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
@@ -34,6 +38,12 @@ public class DecimalValue extends Value<BigDecimal> {
     public DecimalValue(String value) {
         this.raw = value;
     }
+    
+    @Override
+    public QName getCmisTagName() {
+        return CMIS.PROPERTY_DECIMAL;
+    }
+    
     
     public BigDecimal get() {
         if (value == null) {

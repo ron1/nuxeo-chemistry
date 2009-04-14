@@ -16,6 +16,10 @@
  */
 package org.nuxeo.chemistry.client.app.model;
 
+import javax.xml.namespace.QName;
+
+import org.apache.chemistry.atompub.CMIS;
+
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
@@ -29,6 +33,11 @@ public class StringValue extends Value<String> {
 
     public StringValue(String value) {
         this.value = value;
+    }
+    
+    @Override
+    public QName getCmisTagName() {
+        return CMIS.PROPERTY_STRING;
     }
     
     public void set(String value) {

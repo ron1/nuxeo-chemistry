@@ -16,6 +16,10 @@
  */
 package org.nuxeo.chemistry.client.app.model;
 
+import javax.xml.namespace.QName;
+
+import org.apache.chemistry.atompub.CMIS;
+
 
 
 /**
@@ -27,6 +31,11 @@ public class BooleanValue extends Value<Boolean> {
     protected Boolean value;
 
     public BooleanValue() {
+    }
+    
+    @Override
+    public QName getCmisTagName() {
+        return CMIS.PROPERTY_BOOLEAN;
     }
     
     public BooleanValue(String xml) {

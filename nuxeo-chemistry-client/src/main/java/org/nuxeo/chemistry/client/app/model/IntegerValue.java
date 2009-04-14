@@ -16,6 +16,10 @@
  */
 package org.nuxeo.chemistry.client.app.model;
 
+import javax.xml.namespace.QName;
+
+import org.apache.chemistry.atompub.CMIS;
+
 
 
 /**
@@ -33,6 +37,12 @@ public class IntegerValue extends Value<Integer> {
     public IntegerValue(String value) {
         this.raw = value;
     }
+    
+    @Override
+    public QName getCmisTagName() {
+        return CMIS.PROPERTY_INTEGER;
+    }
+    
     
     public Integer get() {
         if (value == null) {

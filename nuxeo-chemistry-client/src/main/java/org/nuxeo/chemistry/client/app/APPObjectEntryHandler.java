@@ -19,12 +19,18 @@ package org.nuxeo.chemistry.client.app;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.util.Date;
 import java.util.List;
 
 import javax.xml.stream.XMLStreamException;
 
+import org.apache.chemistry.atompub.CMIS;
+import org.nuxeo.chemistry.client.app.model.DataMap;
+import org.nuxeo.chemistry.client.app.xml.ATOM;
 import org.nuxeo.chemistry.client.app.xml.CmisEntryReader;
 import org.nuxeo.chemistry.client.app.xml.CmisFeedReader;
+import org.nuxeo.chemistry.client.common.xml.XMLWriter;
 
 
 
@@ -65,7 +71,31 @@ public class APPObjectEntryHandler implements SerializationHandler<APPObjectEntr
 
     public void writeEntity(APPObjectEntry object, OutputStream out)
             throws IOException {
-        throw new UnsupportedOperationException("Not yet implemented");
+        XMLWriter xw = new XMLWriter(new OutputStreamWriter(out));
+        try {
+            xw.start();
+            xw.element("entry").xmlns(ATOM.ATOM_NS).xmlns(CMIS.CMIS_PREFIX, CMIS.CMIS_NS);
+            xw.start();
+            xw.element("id").content("urn:newobject:"+object.getTypeId()); // atom requires an ID to be set.. using a fake one
+            xw.element("title").content(object.getName());
+            xw.element("updated").content(new Date());            
+            xw.element("content").content(""); // TODO fake content for now
+            writeCmisObject(object, xw);
+            xw.end();
+            xw.end();
+        } catch (Exception e) {
+            e.printStackTrace(); // TODO
+            throw new RuntimeException(e);
+        } finally {
+            xw.close();
+        }
     }
 
+    protected void writeCmisObject(APPObjectEntry object, XMLWriter xw) throws IOException {
+        xw.element(CMIS.OBJECT);
+        xw.start();
+        DataMap map = object.getDataMap();
+        map.writeTo(xw);
+        xw.end();
+    }
 }

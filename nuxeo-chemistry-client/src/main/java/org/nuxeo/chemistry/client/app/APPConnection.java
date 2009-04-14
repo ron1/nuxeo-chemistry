@@ -140,7 +140,12 @@ public class APPConnection implements Connection {
     }
 
     public void deleteObject(ObjectEntry object) {
-        throw new UnsupportedOperationException("Not yet implemented");        
+        APPObjectEntry oe = (APPObjectEntry)object;
+        Request req = new Request(oe.getEditLink());
+        Response resp = getConnector().delete(req);
+        if (!resp.isOk()) {
+            throw new ContentManagerException("Remote server returned error code: "+resp.getStatusCode());
+        }        
     }
 
     public Collection<String> deleteTree(ObjectEntry folder, Unfiling unfiling,

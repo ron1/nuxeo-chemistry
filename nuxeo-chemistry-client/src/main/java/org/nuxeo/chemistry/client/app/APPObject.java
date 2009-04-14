@@ -68,5 +68,11 @@ public abstract class APPObject {
         String href = getLink(linkRel);
         return href == null ? null : getRemoteEntity(href, clazz);
     }
+    
+    public String getEditLink() {
+        String href = getLink("edit");
+        return href == null ? getLink("self") : href;
+    }       
+        
 
 }

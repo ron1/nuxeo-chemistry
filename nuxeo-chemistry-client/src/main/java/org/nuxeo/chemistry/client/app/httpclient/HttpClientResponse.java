@@ -105,11 +105,14 @@ public class HttpClientResponse implements Response {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T getEntity(Object context, Class<T> clazz) throws ContentManagerException {
+    public <T> T getEntity(Object context, Class<T> clazz) throws ContentManagerException {        
         InputStream in = getStream();
         try {
             Object result = connector.getSerializationManager().readEntity(context, clazz, in);
             return (T)result;
+        } catch (Throwable e) {
+            e.printStackTrace();
+            return null;
         } finally {
             try {in.close();} catch (IOException e) { e.printStackTrace(); }
         }

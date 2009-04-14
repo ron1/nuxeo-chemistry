@@ -16,7 +16,6 @@
  */
 package org.nuxeo.chemistry.client.app.test;
 
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.URL;
 
