@@ -94,6 +94,7 @@ public class Test {
         
         System.out.println(">>>>> "+repo.getType("Folder"));
         Document doc = entry.getDocument();
+        System.out.println(doc.getId());
         doc.setValue("dc:title", "My Modified Title");
         doc.save();
         

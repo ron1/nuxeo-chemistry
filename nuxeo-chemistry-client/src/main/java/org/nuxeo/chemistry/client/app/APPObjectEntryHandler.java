@@ -76,7 +76,8 @@ public class APPObjectEntryHandler implements SerializationHandler<APPObjectEntr
             xw.start();
             xw.element("entry").xmlns(ATOM.ATOM_NS).xmlns(CMIS.CMIS_PREFIX, CMIS.CMIS_NS);
             xw.start();
-            xw.element("id").content("urn:newobject:"+object.getTypeId()); // atom requires an ID to be set.. using a fake one
+            // atom requires an ID to be set even on new created entries .. 
+            xw.element("id").content("urn:uuid:"+object.getId());
             xw.element("title").content(object.getName());
             xw.element("updated").content(new Date());            
             xw.element("content").content(""); // TODO fake content for now

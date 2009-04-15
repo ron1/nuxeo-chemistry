@@ -404,8 +404,19 @@ public class NuxeoConnection implements Connection, SPI {
 
     public String updateProperties(String objectId, String changeToken,
             Map<String, Serializable> properties) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+        try {
+            DocumentModel doc = session.getDocument(new IdRef(objectId));
+            for (Map.Entry<String,Serializable> pe : properties.entrySet()) {
+                if (!BuiltinProperties.isBuiltin(pe.getKey())) {                    
+                    doc.setPropertyValue(pe.getKey(), pe.getValue());
+                }
+            }
+            doc = session.saveDocument(doc);
+            session.save(); //TODO remove this?
+            return doc.getId();
+        } catch (Exception e) { //TODO handle this
+            throw new RuntimeException(e);
+        }        
     }
 
     public void moveObject(String objectId, String targetFolderId,
