@@ -1,0 +1,10 @@
+To install the cmis webengine module first install chemistry JARs (mvn install into chemistry root)
+and then nuxeo-chemistry JARs (mvn install in nuxeo-chemistry root)
+Then run 
+./package.sh 
+This will generate a target/nxserver directory which contains a lib and a bundles directory
+Copy these directory over an webengine installation and start webengine.
+The CMIS ATOM service will be available at http://localhost:8080/cmis 
+
+You can use the shell applicaiton to browse the repository.
+To install it go to nuxeo-chemistry-shell and run mvn install .. then laucnh the shell using ./run.sh

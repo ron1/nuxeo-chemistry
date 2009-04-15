@@ -49,12 +49,6 @@ public class PropertiesParser {
                 throw new IllegalArgumentException("No name for property"); // Invalid cmis object
             }            
             ValueAdapter va = getValueAdapter(type);
-            if (entryType == null && Property.TYPE_ID.equals(Property.TYPE_ID)) {
-                entryType = repo.getType(key);
-                if (entryType == null) {
-                    throw new IllegalArgumentException("No Such Type: "+key);
-                }
-            }            
             ValueIterator it = new ValueIterator(child);
             if (it.hasNext()) {
                 Serializable val = va.readValue(it.nextValue());
@@ -66,6 +60,12 @@ public class PropertiesParser {
                     } while (it.hasNext());
                     val = vals.toArray(va.createArray(vals.size()));
                 }
+                if (entryType == null && Property.TYPE_ID.equals(key)) {
+                    entryType = repo.getType(val.toString());
+                    if (entryType == null) {
+                        throw new IllegalArgumentException("No Such Type: "+key);
+                    }
+                }            
                 values.add(key);
                 values.add(va);
                 values.add(val);

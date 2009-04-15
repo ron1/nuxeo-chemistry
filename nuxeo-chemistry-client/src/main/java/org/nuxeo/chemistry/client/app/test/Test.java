@@ -45,60 +45,60 @@ public class Test {
         Repository repo = cm.getDefaultRepository();
         Connection conn = repo.getConnection(null);
         
-//        ObjectEntry root = conn.getRootEntry();
-//        List<ObjectEntry> entries = conn.getChildren(root);
-//        
-//        ObjectEntry last = null;
-//        for (ObjectEntry entry : entries) {
-//            System.out.println(">> "+entry.getName()+" ["+entry.getTypeId()+"] - "+entry.getId());
-//        }
-//        last = entries.get(0);
-//        entries = conn.getChildren(last);
-//
-//        System.out.println("--------------------------------");        
-//        for (ObjectEntry entry : entries) {
-//            last = entry;
-//            System.out.println(">> "+entry.getName()+" ["+entry.getTypeId()+"] - "+entry.getId());
-//        }
-//        last = entries.get(0);
-//        entries = conn.getChildren(last);
-//        System.out.println("--------------------------------");
-//        for (ObjectEntry entry : entries) {
-//            last = entry;
-//            System.out.println(">> "+entry.getName()+" ["+entry.getTypeId()+"] - "+entry.getId());
-//        }
-//        
-//        System.out.println(">>> traversal done in "+((System.currentTimeMillis()-s)/1000)+" sec.");
-//
-//        
-//        Type type = last.getType();
-//        System.out.println("Section type: "+type+" - "+((APPType)type).isFolder());
-//        
-//        s = System.currentTimeMillis();
-//        Document doc = last.getDocument();
-//        Folder folder = (Folder)doc;
-//        System.out.println("author: "+folder.getCreatedBy());
-//        System.out.println(">>> doc fetched in "+((System.currentTimeMillis()-s)/1000)+" sec.");
+        ObjectEntry root = conn.getRootEntry();
+        List<ObjectEntry> entries = conn.getChildren(root);
         
-//        Folder f = folder.newFolder("Folder");
-//        f.setName("some_folder");
-//        f.setValue("dc:title", "My Folder");        
-//        f.save();
+        ObjectEntry last = null;
+        for (ObjectEntry entry : entries) {
+            System.out.println(">> "+entry.getName()+" ["+entry.getTypeId()+"] - "+entry.getId());
+        }
+        last = entries.get(0);
+        entries = conn.getChildren(last);
+
+        System.out.println("--------------------------------");        
+        for (ObjectEntry entry : entries) {
+            last = entry;
+            System.out.println(">> "+entry.getName()+" ["+entry.getTypeId()+"] - "+entry.getId());
+        }
+        last = entries.get(0);
+        entries = conn.getChildren(last);
+        System.out.println("--------------------------------");
+        for (ObjectEntry entry : entries) {
+            last = entry;
+            System.out.println(">> "+entry.getName()+" ["+entry.getTypeId()+"] - "+entry.getId());
+        }
+        
+        System.out.println(">>> traversal done in "+((System.currentTimeMillis()-s)/1000)+" sec.");
+
+        
+        Type type = last.getType();
+        System.out.println("Section type: "+type+" - "+((APPType)type).isFolder());
+        
+        s = System.currentTimeMillis();
+        Document doc = last.getDocument();
+        Folder folder = (Folder)doc;
+        System.out.println("author: "+folder.getCreatedBy());
+        System.out.println(">>> doc fetched in "+((System.currentTimeMillis()-s)/1000)+" sec.");
+        
+        Folder f = folder.newFolder("Folder");
+        f.setName("some_folder_1");
+        f.setValue("dc:title", "My Folder");        
+        f.save();
         
         Navigator nav = new Navigator(conn);
         s = System.currentTimeMillis();
-        ObjectEntry entry = nav.resolve("/default-domain/workspaces/mysec/some_folder");
+        ObjectEntry entry = nav.resolve("/default-domain/workspaces/some_folder");
         System.out.println(">>> doc fetched by path in "+((System.currentTimeMillis()-s)/1000)+" sec.");
         System.out.println("entry title: "+entry.getString("dc:title"));
 //        conn.deleteObject(entry);
         
         System.out.println(">>>>> "+repo.getType("Folder"));
-        Document doc = entry.getDocument();
+        doc = entry.getDocument();
         System.out.println(doc.getId());
-        doc.setValue("dc:title", "My Modified Title");
+        doc.setValue("dc:title", "My Modified Title 2");
         doc.save();
         
-        entry = nav.resolve("/default-domain/workspaces/mysec/some_folder");        
+        entry = nav.resolve("/default-domain/workspaces/some_folder");        
         System.out.println("entry modif title: "+entry.getString("dc:title"));
 
     }
