@@ -83,7 +83,7 @@ public abstract class ServiceResource extends ModuleRoot implements UrlResolver 
     
     @Override
     public Object handleError(WebApplicationException e) {
-        
+        e.printStackTrace();
         return super.handleError(e);
     }
 
