@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>org.nuxeo.ecm.webengine</groupId>
+    <groupId>org.nuxeo.ecm.platform</groupId>
     <artifactId>nuxeo-features-parent</artifactId>
     <!-- Select the nuxeo 5 ecm version -->
     <version>5.2-SNAPSHOT</version>
