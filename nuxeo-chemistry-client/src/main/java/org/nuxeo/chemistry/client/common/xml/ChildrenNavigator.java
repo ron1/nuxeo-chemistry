@@ -26,7 +26,19 @@ public class ChildrenNavigator {
 
     protected StaxReader sr;
     protected int depth;
-    
+
+    public ChildrenNavigator(StaxReader sr) throws XMLStreamException {
+        this.sr = sr;
+        int tok = sr.getEventType();
+        if (tok == StaxReader.END_ELEMENT) {
+            depth = sr.depth+1;
+        } else if (tok == StaxReader.START_ELEMENT) {
+            depth = sr.depth;   
+        } else { 
+            throw new XMLStreamException("Ilegal state: current event must be START_ELEMENT or END_ELEMENT");
+        }
+    }
+
     public ChildrenNavigator(StaxReader sr, int depth) {
         this.sr = sr;
         this.depth = depth;

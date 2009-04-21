@@ -24,6 +24,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
 
 import org.apache.abdera.protocol.server.impl.AbstractCollectionAdapter;
@@ -84,6 +85,57 @@ public class ObjectResource extends DefaultObject {
     public Response doHead() {
         return AbderaService.headEntry(ctx, getCollectionAdapter());
     }
+    
+    
+    @GET
+    @Path("lifecycle")
+    public Response getLifeCycle(@QueryParam("value") String lifeCycle) {
+        return null;
+    }
+    
+    @PUT
+    @Path("lifecycle")
+    public Response putLifeCycle(@QueryParam("value") String lifeCycle) {
+        return null;
+    }
+    
+    
+    @POST
+    @Path("lock")
+    public Response postLock(@QueryParam("token") String token) {
+        return null;
+    }
+
+    @DELETE
+    @Path("lock")
+    public Response deleteLock() {
+        return null;
+    }
+    
+    @GET
+    @Path("lock")
+    public Response getLock() {
+        return null;
+    }
+
+    @POST
+    @Path("orderBefore")
+    public Response reorder(@QueryParam("id") String target) {
+        return null;
+    }
+    
+    @POST
+    @Path("permission")
+    public Response postPermission() {
+        return null;
+    }
+    
+    @DELETE
+    @Path("permission")
+    public Response deletePermission() {
+        return null;
+    }
+    
 
     //TODO implement OPTIONS annotation
 //    @OPTIONS

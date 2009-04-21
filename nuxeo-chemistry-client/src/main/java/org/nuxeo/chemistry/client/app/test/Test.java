@@ -25,6 +25,7 @@ import org.apache.chemistry.ObjectEntry;
 import org.apache.chemistry.repository.Repository;
 import org.apache.chemistry.type.BaseType;
 import org.apache.chemistry.type.Type;
+import org.nuxeo.chemistry.client.app.APPConnection;
 import org.nuxeo.chemistry.client.app.APPContentManager;
 import org.nuxeo.chemistry.client.app.APPType;
 import org.nuxeo.chemistry.client.app.Navigator;

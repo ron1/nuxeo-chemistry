@@ -18,9 +18,14 @@ package org.nuxeo.chemistry.client.app.httpclient;
 
 import java.util.List;
 
+import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.NameValuePair;
+import org.apache.commons.httpclient.UsernamePasswordCredentials;
+import org.apache.commons.httpclient.auth.AuthScheme;
+import org.apache.commons.httpclient.auth.CredentialsNotAvailableException;
+import org.apache.commons.httpclient.auth.CredentialsProvider;
 import org.apache.commons.httpclient.methods.DeleteMethod;
 import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
@@ -48,6 +53,9 @@ public class HttpClientConnector implements Connector {
     public HttpClientConnector(APPContentManager cm) {
         this.cm = cm;
         this.client = new HttpClient();
+        this.client.getParams().setAuthenticationPreemptive(true);
+        this.client.getParams().setParameter(
+                CredentialsProvider.PROVIDER, new MyCredentialsProvider());
     }
 
     public APPContentManager getAPPContentManager() {
@@ -132,7 +140,7 @@ public class HttpClientConnector implements Connector {
             PostMethod method = new PostMethod(request.getUrl());
             setMethodParams(method, request);
             setMethodHeaders(method, request);
-            setMethodContent(request, method);
+            setMethodContent(request, method);            
             client.executeMethod(method);
             return new HttpClientResponse(this, method);
         } catch (Exception e) {
@@ -150,6 +158,23 @@ public class HttpClientConnector implements Connector {
             return new HttpClientResponse(this, method);
         } catch (Exception e) {
             throw new ContentManagerException("PUT request failed", e);
+        }
+    }
+    
+    
+    protected class MyCredentialsProvider implements CredentialsProvider {
+        public Credentials getCredentials(AuthScheme scheme, String host,
+                int port, boolean proxy)
+                throws CredentialsNotAvailableException {
+            org.nuxeo.chemistry.client.CredentialsProvider login = (org.nuxeo.chemistry.client.CredentialsProvider)cm.getCurrentLogin();
+            if (login == null) {
+                return null;
+            }
+            org.nuxeo.chemistry.client.Credentials credentials = login.getCredentials();
+            if (credentials == null) {
+                return null;
+            }
+            return new UsernamePasswordCredentials(credentials.getUsername(), new String(credentials.getPassword()));
         }
     }
 

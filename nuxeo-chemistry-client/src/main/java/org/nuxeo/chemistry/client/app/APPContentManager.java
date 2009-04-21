@@ -17,9 +17,14 @@
 package org.nuxeo.chemistry.client.app;
 
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.chemistry.repository.Repository;
 import org.nuxeo.chemistry.client.ContentManager;
 import org.nuxeo.chemistry.client.ContentManagerException;
+import org.nuxeo.chemistry.client.Credentials;
+import org.nuxeo.chemistry.client.CredentialsProvider;
 import org.nuxeo.chemistry.client.NoSuchRepositoryException;
 import org.nuxeo.chemistry.client.app.httpclient.HttpClientConnector;
 import org.nuxeo.chemistry.client.common.AdapterFactory;
@@ -39,6 +44,10 @@ public class APPContentManager implements ContentManager {
     
     protected AdapterManager adapters;
     protected APPServiceDocument app;
+    
+    protected static ThreadLocal<List<CredentialsProvider>> loginStack = new ThreadLocal<List<CredentialsProvider>>();
+    protected CredentialsProvider login;
+    
     
 
     public APPContentManager(String url) {
@@ -162,4 +171,42 @@ public class APPContentManager implements ContentManager {
         app = null;
     }
     
+    public void login(String username, String pass) {
+        login = new DefaultCredentialsProvider(username, pass.toCharArray());
+    }
+
+    public void pushLogin(String username, String pass) {
+        List<CredentialsProvider> stack = loginStack.get();
+        if (stack == null) {
+            stack = new ArrayList<CredentialsProvider>();
+            loginStack.set(stack);
+        }
+        stack.add(new DefaultCredentialsProvider(username, pass.toCharArray()));
+    }
+    
+    
+    public void popLogin() {
+        List<CredentialsProvider> stack = loginStack.get();
+        if (stack != null && !stack.isEmpty()) {
+            stack.remove(stack.size()-1);
+        }
+    }
+    
+    public void logout() {
+        login = null;
+    }
+    
+    public Credentials getCurrentLogin() {
+        List<CredentialsProvider> stack = loginStack.get();
+        return stack == null || stack.isEmpty() ? login.getCredentials() : stack.get(stack.size()-1).getCredentials();
+    }
+    
+    public CredentialsProvider getCredentialsProvider() {
+        return login;
+    }    
+
+    public void setCredentialsProvider(CredentialsProvider provider) {
+        login = provider;
+    }
+
 }

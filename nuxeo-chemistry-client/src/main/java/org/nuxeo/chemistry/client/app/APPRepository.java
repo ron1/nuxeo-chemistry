@@ -52,12 +52,13 @@ public class APPRepository implements Repository {
         new HashMap<String,String>();
 
     public APPRepository(APPContentManager cm) {
-        this.cm = cm;
+        this (cm, null);
     }
             
     public APPRepository(APPContentManager cm, RepositoryInfo info) {
         this.cm = cm;
         this.info = info;
+        loadTypes();
     }
     
     public void setInfo(RepositoryInfo info) {

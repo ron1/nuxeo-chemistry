@@ -51,6 +51,7 @@ public class CMISServiceResource extends ServiceResource {
 
     private static ServiceInfo info = null;
 
+    
     public ServiceInfo getServiceInfo() {
         if (info == null) {
             synchronized (CMISServiceResource.class) {

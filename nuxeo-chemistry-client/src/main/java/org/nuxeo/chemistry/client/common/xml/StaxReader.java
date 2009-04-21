@@ -56,6 +56,9 @@ public class StaxReader extends StreamReaderDelegate {
         });
     }
 
+    public static final XMLInputFactory getFactory() {
+        return factory;
+    }
 
     public static StaxReader newReader(InputStream in) throws XMLStreamException {
         return new StaxReader(factory.createXMLStreamReader(in));
@@ -65,7 +68,10 @@ public class StaxReader extends StreamReaderDelegate {
         return new StaxReader(factory.createXMLStreamReader(reader)); 
     }
 
-
+    public static StaxReader newReader(XMLStreamReader reader) throws XMLStreamException {
+        return new StaxReader(reader); 
+    }
+    
     protected class Context {
         protected Context parent;
         protected int depth;
@@ -101,7 +107,15 @@ public class StaxReader extends StreamReaderDelegate {
         depth--;
         return super.getElementText();
     }
-    
+
+    public final int getElementDepth() throws XMLStreamException {
+        return getEventType() == END_ELEMENT ? depth + 1 : depth;
+    }
+
+    public final int getChildrenDepth() throws XMLStreamException {
+        return getElementDepth() + 1;
+    }
+
     public boolean fwd() throws XMLStreamException {
         if (!hasNext()) {
             return false;
@@ -160,6 +174,28 @@ public class StaxReader extends StreamReaderDelegate {
         return false;
     }
 
+    
+    public boolean getFirstTag(QName name) throws XMLStreamException {
+        if (getEventType() == START_ELEMENT && getName().equals(name)) {
+            return true;
+        }
+        return fwdTag(name);
+    }
+
+    public boolean getFirstTag(String localName) throws XMLStreamException {
+        if (getEventType() == START_ELEMENT && getLocalName().equals(localName)) {
+            return true;
+        }
+        return fwdTag(localName);
+    }
+
+    public boolean getFirstTag(String nsUri, String localName) throws XMLStreamException {
+        if (getEventType() == START_ELEMENT && getLocalName().equals(localName) && getNamespaceURI().equals(nsUri)) {
+            return true;
+        }
+        return fwdTag(nsUri, localName);
+    }
+
     public boolean fwdTag(QName name) throws XMLStreamException {
         // we need to test first hasNext to be sure we fwd in the stream
         // this way we are sure we didn't end in the same element (without forwarding the stream)
@@ -183,7 +219,7 @@ public class StaxReader extends StreamReaderDelegate {
         }
     }
 
-    protected boolean fwdSibling(int cdepth) throws XMLStreamException {
+    public boolean fwdSibling(int cdepth) throws XMLStreamException {
         // we need to test first hasNext to be sure we fwd in the stream
         // this way we are sure we didn't end in the same element (without forwarding the stream)
         while(hasNext() && fwd()) {

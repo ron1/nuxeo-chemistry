@@ -24,6 +24,10 @@ import javax.xml.stream.XMLStreamException;
  */
 public class FilteredChildrenNavigator extends ChildrenNavigator {
 
+    public FilteredChildrenNavigator(StaxReader sr) throws XMLStreamException {
+        super (sr);
+    }
+
     public FilteredChildrenNavigator(StaxReader sr, int depth) {
         super (sr, depth);
     }
