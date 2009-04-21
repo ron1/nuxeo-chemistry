@@ -58,7 +58,6 @@ public class APPRepository implements Repository {
     public APPRepository(APPContentManager cm, RepositoryInfo info) {
         this.cm = cm;
         this.info = info;
-        loadTypes();
     }
     
     public void setInfo(RepositoryInfo info) {
@@ -89,6 +88,7 @@ public class APPRepository implements Repository {
     }    
     
     public Connection getConnection(Map<String, Serializable> parameters) {
+        loadTypes();
         return new APPConnection(this);
     }
     
