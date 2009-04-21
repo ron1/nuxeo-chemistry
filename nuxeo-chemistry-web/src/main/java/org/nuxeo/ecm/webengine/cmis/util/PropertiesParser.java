@@ -29,12 +29,16 @@ import org.apache.chemistry.property.Property;
 import org.apache.chemistry.property.PropertyDefinition;
 import org.apache.chemistry.repository.Repository;
 import org.apache.chemistry.type.Type;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
 public class PropertiesParser {
+    
+    private final static Log log = LogFactory.getLog(PropertiesParser.class);
     
     public Map<String,Serializable> parse(Repository repo, Type entryType, Element props) { 
         ArrayList<Object> values = new ArrayList<Object>();
@@ -89,6 +93,8 @@ public class PropertiesParser {
                         val = (Serializable)ar;
                     }
                 }
+            } else if (Property.PARENT_ID.equals(key)) {
+                log.warn("ParentId specified by client but current document type doesn't define it. Ignoring.");
             } else {
                 throw new IllegalArgumentException("No such property: "+key);
             }
