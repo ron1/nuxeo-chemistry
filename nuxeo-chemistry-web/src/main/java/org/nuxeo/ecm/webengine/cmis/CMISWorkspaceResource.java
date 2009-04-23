@@ -16,9 +16,14 @@
  */
 package org.nuxeo.ecm.webengine.cmis;
 
+import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Response;
 
+import org.nuxeo.ecm.webengine.abdera.AbderaRequest;
+import org.nuxeo.ecm.webengine.abdera.AbderaService;
 import org.nuxeo.ecm.webengine.atom.WorkspaceResource;
 import org.nuxeo.ecm.webengine.model.Resource;
 import org.nuxeo.ecm.webengine.model.WebObject;
@@ -40,9 +45,12 @@ public class CMISWorkspaceResource extends WorkspaceResource {
         return newObject("CmisObject", id, ws);
     }
 
+    @GET
     @Path("types/{id}")
-    public Resource getType(@PathParam("id") String id) {
-        return newObject("CmisType", id, ws);
-    }    
+    @Produces("application/atom+xml;type=entry")
+    public Response getType(@PathParam("id") String id) {
+        AbderaRequest.setParameter(ctx, "objectid", id);
+        return AbderaService.getEntry(ctx, ws.getCollection("types_children").getCollectionAdapter());
+    }
 
 }

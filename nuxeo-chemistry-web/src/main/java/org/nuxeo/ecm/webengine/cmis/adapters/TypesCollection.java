@@ -21,6 +21,8 @@ package org.nuxeo.ecm.webengine.cmis.adapters;
 import java.util.Date;
 import java.util.List;
 
+import javax.xml.namespace.QName;
+
 import org.apache.abdera.factory.Factory;
 import org.apache.abdera.i18n.iri.IRI;
 import org.apache.abdera.model.Content;
@@ -30,6 +32,8 @@ import org.apache.abdera.model.Person;
 import org.apache.abdera.protocol.server.RequestContext;
 import org.apache.abdera.protocol.server.context.ResponseContextException;
 import org.apache.chemistry.atompub.CMIS;
+import org.apache.chemistry.property.Choice;
+import org.apache.chemistry.property.PropertyDefinition;
 import org.apache.chemistry.repository.Repository;
 import org.apache.chemistry.type.Type;
 
@@ -38,7 +42,7 @@ import org.apache.chemistry.type.Type;
  *
  * @author Florent Guillaume
  */
-public class TypesCollection extends CMISCollection<Type> {
+public class TypesCollection extends CMISCollection<Type> implements CmisProperties {
 
     public TypesCollection(String title, Repository repository) {
         super("types", title, repository);
@@ -71,6 +75,12 @@ public class TypesCollection extends CMISCollection<Type> {
     protected String addEntryDetails(RequestContext request, Entry entry,
             IRI feedIri, Type type) throws ResponseContextException {
         Factory factory = request.getAbdera().getFactory();
+
+        Boolean includePropertyDefs = Boolean.FALSE;
+        String v = request.getHeader("CMIS-includePropertyDefinitions");
+        if (v != null) {
+            includePropertyDefs = Boolean.valueOf(v);
+        }
 
         entry.setId(getId(type));
         entry.setTitle(getTitle(type));
@@ -120,10 +130,96 @@ public class TypesCollection extends CMISCollection<Type> {
         el = factory.newElement(CMIS.VERSIONABLE, dt);
         el.setText(bool(type.isVersionable()));
 
+        if (includePropertyDefs) {
+            for (PropertyDefinition pd : type.getPropertyDefinitions()) {
+                writePropertyDef(pd, dt);
+            }
+        }
+        
         return link;
+    }
+    
+    protected void writePropertyDef(PropertyDefinition pd, Element parent) {
+        QName name = getPropertyDefTag(pd);
+        Factory factory = parent.getFactory();
+        Element pdel = factory.newElement(name, parent);
+        Element el = factory.newElement(CMIS.NAME, pdel);
+        el.setText(pd.getName());
+        el = factory.newElement(ID, pdel);
+        el.setText(pd.getId());
+        el = factory.newElement(CMIS.DISPLAY_NAME, pdel);
+        el.setText(pd.getDisplayName());
+        el = factory.newElement(CMIS.DESCRIPTION, pdel);
+        el.setText(pd.getDescription());        
+        el = factory.newElement(PROPERTY_TYPE, pdel);
+        el.setText(pd.getType().toString()); 
+        
+        el = factory.newElement(CARDINALITY, pdel);
+        el.setText(getCardinalityString(pd));
+        el = factory.newElement(UPDATEABILITY, pdel);        
+        el.setText(pd.getUpdatability().toString());
+        el = factory.newElement(INHERITED, pdel);
+        el.setText(Boolean.toString(pd.isInherited()));
+        el = factory.newElement(REQUIRED, pdel);
+        el.setText(Boolean.toString(pd.isRequired()));
+        el = factory.newElement(CMIS.QUERYABLE, pdel);
+        el.setText(Boolean.toString(pd.isQueryable()));
+        el = factory.newElement(ORDERABLE, pdel);
+        el.setText(Boolean.toString(pd.isOrderable()));
+        el.setText(pd.getDisplayName());
+        
+        int maxlen = pd.getMaxLength();
+        if (maxlen > -1) {
+            el = factory.newElement(MAX_LENGTH, pdel);
+            el.setText(Integer.toString(maxlen));
+        }
+        
+        Object defval = pd.getDefaultValue();
+        if (defval != null) {
+            el = factory.newElement(DEFAULT_VALUE, pdel);
+            el = factory.newElement(CMIS.VALUE, el);
+            el.setText(defval.toString()); // TODO write value correctly
+        }
+        
+        el = factory.newElement(OPEN_CHOICE, pdel);
+        el.setText(Boolean.toString(pd.isOpenChoice()));
+
+        //TODO write down choices ...
+        List<Choice> choices = pd.getChoices();
+        if (choices != null) {
+            //TODO
+        }
+        
+    }
+    
+    public static String getCardinalityString(PropertyDefinition pd) {
+        return pd.isMultiValued() ? "multi" : "single";
     }
 
 
+    public static QName getPropertyDefTag(PropertyDefinition pd) {
+        switch (pd.getType()) {
+        case STRING:
+            return PROP_STRING_DEF;
+        case BOOLEAN:
+            return PROP_BOOLEAN_DEF;
+        case DATETIME:
+            return PROP_DATETIME_DEF;
+        case ID:
+            return PROP_ID_DEF;
+        case INTEGER:
+            return PROP_INTEGER_DEF;
+        case DECIMAL:
+            return PROP_DATETIME_DEF;
+        case URI:
+            return PROP_URI_DEF;
+        case XML:
+            return PROP_XML_DEF;
+        case HTML:
+            return PROP_HTML_DEF;
+        }
+        throw new UnsupportedOperationException("No such property type: "+pd.getType());
+    }
 
     @Override
     public Iterable<Type> getEntries(RequestContext request)
@@ -160,8 +256,7 @@ public class TypesCollection extends CMISCollection<Type> {
     @Override
     public Type getEntry(String resourceName, RequestContext request)
             throws ResponseContextException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException();
+        return repository.getType(resourceName);
     }
 
     @Override
@@ -175,4 +270,11 @@ public class TypesCollection extends CMISCollection<Type> {
         return new Date();
     }
 
+    /**
+     * Used to resolve real objects. So this will be the object ID.
+     */
+    @Override
+    public String getResourceName(RequestContext request) {
+        return request.getTarget().getParameter("objectid");
+    }
 }

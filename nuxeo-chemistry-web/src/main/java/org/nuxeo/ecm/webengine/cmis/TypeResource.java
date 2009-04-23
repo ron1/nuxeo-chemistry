@@ -30,8 +30,8 @@ import org.nuxeo.ecm.webengine.model.WebObject;
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
-@WebObject(type="CmisTypes")
-public class TypeObject extends CollectionResource {
+@WebObject(type="CmisType")
+public class TypeResource extends CollectionResource {
 
     protected CMISWorkspaceInfo ws;
     protected String id;
