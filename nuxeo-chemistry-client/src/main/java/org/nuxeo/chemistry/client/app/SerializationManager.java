@@ -21,6 +21,7 @@ import java.io.OutputStream;
 import java.util.List;
 
 import org.nuxeo.chemistry.client.ContentManagerException;
+import org.nuxeo.chemistry.client.common.atom.BuildContext;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
@@ -30,9 +31,9 @@ public interface SerializationManager {
 
     void writeEntity(Object object, OutputStream out) throws ContentManagerException;
 
-    <T> T readEntity(Object context, Class<T> type, InputStream in) throws ContentManagerException;
+    <T> T readEntity(BuildContext context, Class<T> type, InputStream in) throws ContentManagerException;
 
-    <T> List<T> readFeed(Object context, Class<?> type, InputStream in) throws ContentManagerException;
+    <T> List<T> readFeed(BuildContext context, Class<?> type, InputStream in) throws ContentManagerException;
 
     <T> SerializationHandler<T> getHandler(Class<T> clazz);
 

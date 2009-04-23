@@ -14,34 +14,31 @@
  * Contributors:
  *     bstefanescu
  */
-package org.nuxeo.chemistry.client.app.xml;
+package org.nuxeo.chemistry.client.common.xml;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.nuxeo.chemistry.client.app.APPType;
-import org.nuxeo.chemistry.client.common.xml.StaxReader;
+import javax.xml.stream.XMLStreamException;
 
 /**
+ * An element iterator that iterates only over the sibling elements. 
+ * 
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
-public class TypeFeedReader extends AbstractFeedReader<Map<String,APPType>, APPType> {
+public abstract class SiblingsIterator<T> extends ElementIterator<T> {
 
-    public final static TypeFeedReader INSTANCE = new TypeFeedReader();  
+    protected int depth;
     
-    public TypeFeedReader() {
-        super(TypeEntryReader.INSTANCE);
+    public SiblingsIterator(StaxReader sr) throws XMLStreamException {
+        this (sr, sr.getElementDepth());
     }
     
-    @Override
-    protected void addEntry(Map<String,APPType> feed, APPType entry) {
-        feed.put(entry.getId(), entry);
+    public SiblingsIterator(StaxReader sr, int depth) {
+        super (sr);
+        this.depth = depth;
     }
 
-    @Override
-    protected Map<String,APPType> newFeed(Object context, StaxReader reader) {
-        return new HashMap<String,APPType>();
+    protected boolean forward() throws XMLStreamException {
+        return reader.fwdSibling(depth);
     }
-    
+            
 }

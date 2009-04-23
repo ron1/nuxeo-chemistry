@@ -23,12 +23,10 @@ import org.apache.chemistry.Document;
 import org.apache.chemistry.Folder;
 import org.apache.chemistry.ObjectEntry;
 import org.apache.chemistry.repository.Repository;
-import org.apache.chemistry.type.BaseType;
 import org.apache.chemistry.type.Type;
-import org.nuxeo.chemistry.client.app.APPConnection;
 import org.nuxeo.chemistry.client.app.APPContentManager;
 import org.nuxeo.chemistry.client.app.APPType;
-import org.nuxeo.chemistry.client.app.Navigator;
+import org.nuxeo.chemistry.client.common.Navigator;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
@@ -96,7 +94,7 @@ public class Test {
         System.out.println(">>>>> "+repo.getType("Folder"));
         doc = entry.getDocument();
         System.out.println(doc.getId());
-        doc.setValue("dc:title", "My Modified Title 2");
+        doc.setValue("dc:title", "My Modified Title 3");
         doc.save();
         
         entry = nav.resolve("/default-domain/workspaces/some_folder");        

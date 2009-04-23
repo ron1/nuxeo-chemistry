@@ -25,6 +25,7 @@ import org.apache.chemistry.property.PropertyDefinition;
 import org.apache.chemistry.type.BaseType;
 import org.apache.chemistry.type.ContentStreamPresence;
 import org.apache.chemistry.type.Type;
+import org.nuxeo.chemistry.client.common.atom.BuildContext;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
@@ -50,11 +51,12 @@ public class APPType extends APPObject implements Type {
         this.map = props;
     }
 
-    public void init(Map<String,String> properties) {
+    public void init(Map<String,String> properties, Map<String, PropertyDefinition> props) {
         if (this.map != null) {
             throw new IllegalStateException("Type is already intialized");
         }
-        this.map = properties; 
+        this.map = properties;
+        this.propertyDefs = props;
     }
     
     @Override
@@ -173,7 +175,7 @@ public class APPType extends APPObject implements Type {
     protected void loadPropertyDef() {
         if (propertyDefs == null) {
             if (true) throw new UnsupportedOperationException("Not yet implemented");
-            APPType typeDef = getRemoteEntity(getEditLink(), APPType.class);
+            APPType typeDef = getRemoteEntity(new BuildContext(repository), getEditLink(), APPType.class);
             propertyDefs = typeDef.propertyDefs;
             //TODO
         }

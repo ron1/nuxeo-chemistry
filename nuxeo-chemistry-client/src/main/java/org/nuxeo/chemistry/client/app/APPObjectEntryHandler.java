@@ -26,10 +26,8 @@ import java.util.List;
 import javax.xml.stream.XMLStreamException;
 
 import org.apache.chemistry.atompub.CMIS;
-import org.nuxeo.chemistry.client.app.model.DataMap;
-import org.nuxeo.chemistry.client.app.xml.ATOM;
-import org.nuxeo.chemistry.client.app.xml.CmisEntryReader;
-import org.nuxeo.chemistry.client.app.xml.CmisFeedReader;
+import org.nuxeo.chemistry.client.common.atom.ATOM;
+import org.nuxeo.chemistry.client.common.atom.BuildContext;
 import org.nuxeo.chemistry.client.common.xml.XMLWriter;
 
 
@@ -38,19 +36,22 @@ import org.nuxeo.chemistry.client.common.xml.XMLWriter;
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
-public class APPObjectEntryHandler implements SerializationHandler<APPObjectEntry> {
+public class APPObjectEntryHandler implements SerializationHandler<org.nuxeo.chemistry.client.app.APPObjectEntry> {
     
     public String getContentType() {
         return "application/atom+xml"; //TODO
     }
 
-    public Class<APPObjectEntry> getObjectType() {
-        return APPObjectEntry.class;
+    public Class<org.nuxeo.chemistry.client.app.APPObjectEntry> getObjectType() {
+        return org.nuxeo.chemistry.client.app.APPObjectEntry.class;
     }
 
-    public List<APPObjectEntry> readFeed(Object context, InputStream in)  throws IOException {
+    public List<org.nuxeo.chemistry.client.app.APPObjectEntry> readFeed(BuildContext context, InputStream in)  throws IOException {
         try {
-            return CmisFeedReader.INSTANCE.read(context, in);
+            APPFeedBuilder builder = APPFeedBuilder.getBuilder();
+            return builder.read(context, in);
+
+//            return CmisFeedReader.INSTANCE.read(context, in);
         } catch (XMLStreamException e) {
             IOException ioe = new IOException("Failed to read feed");
             ioe.initCause(e);
@@ -58,10 +59,12 @@ public class APPObjectEntryHandler implements SerializationHandler<APPObjectEntr
         }
     }
 
-    public APPObjectEntry readEntity(Object context, InputStream in)
+    public org.nuxeo.chemistry.client.app.APPObjectEntry readEntity(BuildContext context, InputStream in)
             throws IOException {
         try {
-            return CmisEntryReader.INSTANCE.read(context, in);
+            APPObjectEntryBuilder builder = APPObjectEntryBuilder.getBuilder();
+            return builder.read(context, in);
+            //return CmisEntryReader.INSTANCE.read(context, in);
         } catch (XMLStreamException e) {
             IOException ioe = new IOException("Failed to read feed");
             ioe.initCause(e);
@@ -69,7 +72,7 @@ public class APPObjectEntryHandler implements SerializationHandler<APPObjectEntr
         }
     }
 
-    public void writeEntity(APPObjectEntry object, OutputStream out)
+    public void writeEntity(org.nuxeo.chemistry.client.app.APPObjectEntry object, OutputStream out)
             throws IOException {
         XMLWriter xw = new XMLWriter(new OutputStreamWriter(out));
         try {
@@ -92,11 +95,13 @@ public class APPObjectEntryHandler implements SerializationHandler<APPObjectEntr
         }
     }
 
-    protected void writeCmisObject(APPObjectEntry object, XMLWriter xw) throws IOException {
-        xw.element(CMIS.OBJECT);
-        xw.start();
-        DataMap map = object.getDataMap();
-        map.writeTo(xw);
-        xw.end();
+    protected void writeCmisObject(org.nuxeo.chemistry.client.app.APPObjectEntry object, XMLWriter xw) throws IOException {
+//        xw.element(CMIS.OBJECT);
+//        xw.start();
+//        object.getProperties();
+//        DataMap map = object.getDataMap();
+//        map.writeTo(xw);
+//        xw.end();
+        object.writeObjectTo(xw);
     }
 }

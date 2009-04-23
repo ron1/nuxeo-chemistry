@@ -17,7 +17,7 @@
 package org.nuxeo.chemistry.client.app.test;
 
 import org.nuxeo.chemistry.client.app.APPContentManager;
-import org.nuxeo.chemistry.client.app.xml.ATOM;
+import org.nuxeo.chemistry.client.common.atom.ATOM;
 
 
 /**

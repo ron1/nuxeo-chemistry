@@ -14,7 +14,7 @@
  * Contributors:
  *     bstefanescu
  */
-package org.nuxeo.chemistry.client.app.xml;
+package org.nuxeo.chemistry.client.common.atom;
 
 import javax.xml.namespace.QName;
 

@@ -14,55 +14,33 @@
  * Contributors:
  *     bstefanescu
  */
-package org.nuxeo.chemistry.client.app.model;
+package org.nuxeo.chemistry.client.common.atom;
 
-import javax.xml.namespace.QName;
+import javax.xml.stream.XMLStreamException;
 
 import org.apache.chemistry.atompub.CMIS;
+import org.nuxeo.chemistry.client.common.xml.ChildrenIterator;
+import org.nuxeo.chemistry.client.common.xml.StaxReader;
+
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
-public class StringValue extends Value<String> {
+public class ValueIterator extends ChildrenIterator<String> {
 
-    protected String value;
-
-    public StringValue() {
-    }
-
-    public StringValue(String value) {
-        this.value = value;
+    public ValueIterator(StaxReader sr) throws XMLStreamException {
+        super (sr);
     }
     
+    protected boolean accept() {
+        return (reader.getLocalName().equals(CMIS.VALUE.getLocalPart()) 
+                && reader.getNamespaceURI().equals(CMIS.VALUE.getNamespaceURI()));
+    }
+
     @Override
-    public QName getCmisTagName() {
-        return CMIS.PROPERTY_STRING;
+    protected String createValue() throws XMLStreamException {
+        return reader.getElementText();
     }
     
-    public void set(String value) {
-        this.value = value;
-    }
-    
-    public String get() {
-        return value;
-    }
-    
-    public String getXML() {
-        return value;
-    }
-    
-    @Override
-    public void setXML(String val) {
-        this.value = val;
-    }
-    
-    @Override
-    public Class<?> getType() {
-        return String.class;
-    }
-
-    public static StringValue fromString(String value) {
-        return new StringValue(value);
-    }
 }

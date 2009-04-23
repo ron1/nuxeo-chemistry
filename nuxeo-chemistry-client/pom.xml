@@ -27,10 +27,10 @@
       <artifactId>chemistry-atompub</artifactId>
     </dependency>
 
-    <!--dependency>
+    <dependency>
       <groupId>org.apache.chemistry</groupId>
       <artifactId>chemistry-commons</artifactId>
-    </dependency-->
+    </dependency>
 
     <dependency>
       <groupId>stax</groupId>

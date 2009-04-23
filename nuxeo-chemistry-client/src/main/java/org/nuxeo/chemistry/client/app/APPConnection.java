@@ -31,11 +31,9 @@ import org.apache.chemistry.ReturnVersion;
 import org.apache.chemistry.SPI;
 import org.apache.chemistry.Unfiling;
 import org.apache.chemistry.atompub.CMIS;
-import org.apache.chemistry.property.Property;
 import org.apache.chemistry.repository.Repository;
 import org.nuxeo.chemistry.client.ContentManagerException;
-import org.nuxeo.chemistry.client.app.model.DataMap;
-import org.nuxeo.chemistry.client.app.model.StringValue;
+import org.nuxeo.chemistry.client.common.atom.BuildContext;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
@@ -43,7 +41,7 @@ import org.nuxeo.chemistry.client.app.model.StringValue;
  */
 public class APPConnection implements Connection {
 
-    protected ObjectEntry root;
+    protected APPFolder root;
     
     protected Connector connector;
     protected APPRepository repository;
@@ -72,31 +70,15 @@ public class APPConnection implements Connection {
     }
 
     public Folder getRootFolder() {
-        throw new UnsupportedOperationException("Not yet implemented");
+        if (root == null) {
+            String rootId = repository.info.getRootFolderId();
+            root = (APPFolder)getObject(rootId, ReturnVersion.THIS);
+        }
+        return root;
     }
     
     public ObjectEntry getRootEntry() {
-        if (root == null) {
-            DataMap map = new DataMap();
-            //Map<String, Serializable> props = new HashMap<String, Serializable>();
-            //props.put(Property.ID, repository.info.getRootFolderId());
-            //props.put(Property.NAME, "Root");
-            map.put(Property.ID, new StringValue(repository.info.getRootFolderId()));
-            map.put(Property.NAME, new StringValue("Root"));
-            APPObjectEntry entry = new APPObjectEntry(this, map);
-            //TODO the URL to the root itself ... this need to be fixed
-            // a way is to get the root children feed and use the self link
-            // for now we hard-code logic
-            String href = repository.getCollectionHref(CMIS.COL_ROOT_CHILDREN);
-            String self = href.substring(0, href.length()-"children".length());
-            self += "objects/" + repository.info.getRootFolderId();
-            entry.addLink("self", self); 
-            entry.addLink("edit", self); 
-            entry.addLink(CMIS.LINK_CHILDREN, href);
-            entry.addLink(CMIS.LINK_DESCENDANTS, repository.getCollectionHref(CMIS.COL_ROOT_DESCENDANTS));
-            root = entry;
-        }
-        return root;
+        return getRootFolder();
     }
     
     public String getEntryLink(ObjectEntry entry, String rel) {
@@ -111,7 +93,8 @@ public class APPConnection implements Connection {
         if (!resp.isOk()) {
             throw new ContentManagerException("Remote server returned error code: "+resp.getStatusCode());
         }        
-        return (List<ObjectEntry>)resp.getFeed(this, APPObjectEntry.class);
+        return (List<ObjectEntry>)resp.getFeed(new BuildContext(this),
+                APPObjectEntry.class);
     }
 
     public void addObjectToFolder(ObjectEntry object, ObjectEntry folder) {
@@ -166,8 +149,43 @@ public class APPConnection implements Connection {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
+    /**
+     * TODO temporary implementation to have something working until search is implemented
+     * Versions not yet supported
+     */
     public CMISObject getObject(String objectId, ReturnVersion returnVersion) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        String rootId = repository.getInfo().getRootFolderId();
+        String href = repository.getCollectionHref("root-children");        
+        int p = href.lastIndexOf("/");
+        if (p == href.length()-1) {
+            p = href.lastIndexOf("/", href.length()-1);
+        }
+        if (p > -1) {
+            href = href.substring(0, p+1);            
+        }
+        href += "objects/"+rootId;
+        Request req = new Request(href);
+        Response resp = connector.get(req);
+        if (!resp.isOk()) {
+            throw new ContentManagerException("Remote server returned error code: "+resp.getStatusCode());
+        }        
+
+        APPObjectEntry entry = resp.getEntity(new BuildContext(this),
+                APPObjectEntry.class);
+        switch(entry.getType().getBaseType()) {
+        case DOCUMENT:
+            return new APPDocument(this, entry);
+        case FOLDER:
+            return new APPFolder(this, entry);
+        case POLICY:
+            throw new UnsupportedOperationException("Not yet implemented");
+        case RELATIONSHIP:
+            throw new UnsupportedOperationException("Not yet implemented");
+        default: 
+            throw new IllegalArgumentException("Unknown object base type"+entry.getType().getBaseType());        
+        }
+
+        //throw new UnsupportedOperationException("Not yet implemented");
     }
 
     public List<ObjectEntry> getRelationships(ObjectEntry object,

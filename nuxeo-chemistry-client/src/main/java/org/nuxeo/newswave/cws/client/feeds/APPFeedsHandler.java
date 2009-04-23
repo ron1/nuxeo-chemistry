@@ -27,6 +27,7 @@ import org.apache.abdera.model.Entry;
 import org.apache.abdera.model.Feed;
 import org.nuxeo.chemistry.client.app.DefaultFeed;
 import org.nuxeo.chemistry.client.app.SerializationHandler;
+import org.nuxeo.chemistry.client.common.atom.BuildContext;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
@@ -43,9 +44,9 @@ public class APPFeedsHandler implements SerializationHandler<FeedDescriptor> {
         return "application/atom+xml";
     }
 
-    public org.nuxeo.chemistry.client.app.Feed<FeedDescriptor> readFeed(Object context,
+    public org.nuxeo.chemistry.client.app.Feed<FeedDescriptor> readFeed(BuildContext context,
             InputStream in) throws IOException {
-        APPFeedService service = (APPFeedService)context;
+        APPFeedService service = (APPFeedService)context.getData("feedService");
         Document<Feed> document = Abdera.getInstance().getParser().parse(in);
         List<Entry> entries = document.getRoot().getEntries();
         DefaultFeed<FeedDescriptor> feeds = new DefaultFeed<FeedDescriptor>(entries.size());
@@ -56,7 +57,7 @@ public class APPFeedsHandler implements SerializationHandler<FeedDescriptor> {
         return feeds;
     }
 
-    public FeedDescriptor readEntity(Object context, InputStream in) throws IOException {
+    public FeedDescriptor readEntity(BuildContext context, InputStream in) throws IOException {
         throw new UnsupportedOperationException("readEntity not supported in FeedsHandler");
     }
 

@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.nuxeo.chemistry.client.ContentManagerException;
+import org.nuxeo.chemistry.client.common.atom.BuildContext;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
@@ -55,18 +56,19 @@ public abstract class APPObject {
         return null;
     }
 
-    public <T> T getRemoteEntity(String href, Class<T> clazz) {
+    public <T> T getRemoteEntity(BuildContext ctx, String href, Class<T> clazz) {
         Request req = new Request(href);
         Response resp = getConnector().get(req);
         if (!resp.isOk()) {
             throw new ContentManagerException("Remote server returned error code: "+resp.getStatusCode());
         }        
-        return (T)resp.getEntity(this, clazz);
+        return (T)resp.getEntity(ctx, clazz);
     }
 
-    public <T> T getLinkedEntity(String linkRel, Class<T> clazz) {
+
+    public <T> T getLinkedEntity(BuildContext ctx, String linkRel, Class<T> clazz) {
         String href = getLink(linkRel);
-        return href == null ? null : getRemoteEntity(href, clazz);
+        return href == null ? null : getRemoteEntity(ctx, href, clazz);
     }
     
     public String getEditLink() {

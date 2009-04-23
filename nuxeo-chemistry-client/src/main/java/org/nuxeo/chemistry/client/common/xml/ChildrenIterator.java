@@ -14,33 +14,18 @@
  * Contributors:
  *     bstefanescu
  */
-package org.nuxeo.chemistry.client.app.xml;
+package org.nuxeo.chemistry.client.common.xml;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.net.URL;
-
-import javax.xml.stream.XMLStreamConstants;
 import javax.xml.stream.XMLStreamException;
-
-import org.nuxeo.chemistry.client.common.xml.StaxReader;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
-public interface FeedReader<T> extends XMLStreamConstants, ATOM {
-    
-    public T read(Object context, URL url) throws XMLStreamException, IOException;
-    
-    public T read(Object context, File file) throws XMLStreamException, IOException;
-    
-    public T read(Object context, InputStream in) throws XMLStreamException;
-    
-    public T read(Object context, Reader reader) throws XMLStreamException;
-    
-    public T read(Object context, StaxReader reader) throws XMLStreamException;
+public abstract class ChildrenIterator<T> extends SiblingsIterator<T> {
 
+    public ChildrenIterator(StaxReader sr) throws XMLStreamException {
+        super (sr, sr.getChildrenDepth());
+    }
+        
 }

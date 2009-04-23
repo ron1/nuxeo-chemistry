@@ -14,34 +14,30 @@
  * Contributors:
  *     bstefanescu
  */
-package org.nuxeo.chemistry.client.app.xml;
+package org.nuxeo.chemistry.client.app;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.nuxeo.chemistry.client.app.APPObjectEntry;
-import org.nuxeo.chemistry.client.common.xml.StaxReader;
+import java.security.Principal;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
-public class CmisFeedReader extends AbstractFeedReader<List<APPObjectEntry>, APPObjectEntry> {
+public class APPPrincipal implements Principal {
 
+    protected String name;    
+    protected char[] password;
+
+    public APPPrincipal(String name, char[] password) {
+        this.name = name;
+        this.password = password;
+    }
     
-    public static final CmisFeedReader INSTANCE = new CmisFeedReader();
+    public String getName() {
+        return name;
+    }
     
-    public CmisFeedReader() {
-        super (CmisEntryReader.INSTANCE);
+    public char[] getPassword() {
+        return password;
     }
 
-    @Override
-    public List<APPObjectEntry> newFeed(Object context, StaxReader reader) {
-        return new ArrayList<APPObjectEntry>();
-    }
-
-    @Override
-    protected void addEntry(List<APPObjectEntry> feed, APPObjectEntry entry) {
-        feed.add(entry);
-    }
 }

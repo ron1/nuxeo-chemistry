@@ -26,6 +26,7 @@ import java.util.Map;
 import org.nuxeo.chemistry.client.ContentManagerException;
 import org.nuxeo.chemistry.client.common.ClassLookup;
 import org.nuxeo.chemistry.client.common.ClassRegistry;
+import org.nuxeo.chemistry.client.common.atom.BuildContext;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
@@ -79,7 +80,7 @@ public class DefaultSerializationManager implements SerializationManager, ClassR
         }
     }
 
-    public <T> T readEntity(Object context, Class<T> type, InputStream in) throws ContentManagerException {
+    public <T> T readEntity(BuildContext context, Class<T> type, InputStream in) throws ContentManagerException {
         SerializationHandler ch = getHandler(type);
         if (ch == null) {
             throw new ContentManagerException("Content object not registered: "+type);
@@ -91,7 +92,7 @@ public class DefaultSerializationManager implements SerializationManager, ClassR
         }
     }
 
-    public <T> List<T> readFeed(Object context, Class<?> type, InputStream in) throws ContentManagerException {
+    public <T> List<T> readFeed(BuildContext context, Class<?> type, InputStream in) throws ContentManagerException {
         SerializationHandler ch = getHandler(type);
         if (ch == null) {
             throw new ContentManagerException("Content object not registered: "+type);

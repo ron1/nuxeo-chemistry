@@ -29,6 +29,7 @@ import org.nuxeo.chemistry.client.NoSuchRepositoryException;
 import org.nuxeo.chemistry.client.app.httpclient.HttpClientConnector;
 import org.nuxeo.chemistry.client.common.AdapterFactory;
 import org.nuxeo.chemistry.client.common.AdapterManager;
+import org.nuxeo.chemistry.client.common.atom.BuildContext;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
@@ -144,7 +145,10 @@ public class APPContentManager implements ContentManager {
             if (!resp.isOk()) {
                 throw new ContentManagerException("Remote server returned error code: "+resp.getStatusCode());
             }
-            app = resp.getEntity(this, APPServiceDocument.class);
+            BuildContext ctx = new BuildContext();
+            ctx.setData("cm", this);
+            app = resp.getEntity(ctx,
+                    APPServiceDocument.class);
         }
         return app.getRepositories();
     }
@@ -209,4 +213,5 @@ public class APPContentManager implements ContentManager {
         login = provider;
     }
 
+    
 }

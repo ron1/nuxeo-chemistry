@@ -17,14 +17,15 @@
 package org.nuxeo.chemistry.client.app;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.chemistry.Document;
 import org.apache.chemistry.Folder;
 import org.apache.chemistry.ObjectEntry;
 import org.apache.chemistry.atompub.CMIS;
-import org.apache.chemistry.property.Property;
 import org.apache.chemistry.type.BaseType;
-import org.nuxeo.chemistry.client.app.model.DataMap;
+import org.nuxeo.chemistry.client.common.atom.XmlProperty;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
@@ -33,17 +34,28 @@ import org.nuxeo.chemistry.client.app.model.DataMap;
 public class APPFolder extends APPDocument implements Folder {
 
     
-    public APPFolder(APPConnection connection) {
-        this (connection, null);
+    public APPFolder(APPConnection connection, String typeId) {
+        super (connection, typeId);
     }
 
-    public APPFolder(APPConnection connection, DataMap dataMap) {
-        super (connection, dataMap);
+    public APPFolder(APPConnection connection, String typeId, String parentId) {
+        super (connection, typeId, parentId);
     }
+
 
     public List<ObjectEntry> getChildren(BaseType type, String orderBy) {        
         return connection.getChildren(this); //TODO type and orderBy
     }
+    
+    public APPFolder(APPConnection connection, Map<String,XmlProperty> properties, Set<String> allowableActions) {
+        super (connection, properties, allowableActions);
+    }
+    
+    public APPFolder(APPConnection connection, APPObjectEntry entry) {
+        super (connection, entry.properties, entry.allowableActions);
+        links = entry.links;
+    }
+    
 
     @Override
     public Folder getFolder() {
@@ -51,21 +63,13 @@ public class APPFolder extends APPDocument implements Folder {
     }
     
     public Document newDocument(String typeId) {
-        APPDocument doc = new APPDocument(connection);
-        DataMap map = new DataMap();
-        map.set(Property.TYPE_ID, typeId);
-        map.set(Property.PARENT_ID, getId());
-        doc.init(map);
+        APPDocument doc = new APPDocument(connection, typeId, getId());
         doc.addLink(CMIS.LINK_PARENT, getEditLink());
         return doc;
     }
 
     public Folder newFolder(String typeId) {
-        APPFolder doc = new APPFolder(connection);
-        DataMap map = new DataMap();
-        map.set(Property.TYPE_ID, typeId);
-        map.set(Property.PARENT_ID, getId());
-        doc.init(map);
+        APPFolder doc = new APPFolder(connection, typeId, getId());
         doc.addLink(CMIS.LINK_PARENT, getEditLink());
         return doc;
     }

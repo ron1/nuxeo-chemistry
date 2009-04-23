@@ -26,6 +26,7 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.nuxeo.chemistry.client.ContentManagerException;
 import org.nuxeo.chemistry.client.app.Connector;
 import org.nuxeo.chemistry.client.app.Response;
+import org.nuxeo.chemistry.client.common.atom.BuildContext;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
@@ -105,7 +106,7 @@ public class HttpClientResponse implements Response {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> T getEntity(Object context, Class<T> clazz) throws ContentManagerException {        
+    public <T> T getEntity(BuildContext context, Class<T> clazz) throws ContentManagerException {        
         InputStream in = getStream();
         try {
             Object result = connector.getSerializationManager().readEntity(context, clazz, in);
@@ -118,7 +119,7 @@ public class HttpClientResponse implements Response {
         }
     }
 
-    public List<?> getFeed(Object context, Class<?> clazz) throws ContentManagerException {
+    public List<?> getFeed(BuildContext context, Class<?> clazz) throws ContentManagerException {
         InputStream in = getStream();
         try {
             return connector.getSerializationManager().readFeed(context, clazz, in);

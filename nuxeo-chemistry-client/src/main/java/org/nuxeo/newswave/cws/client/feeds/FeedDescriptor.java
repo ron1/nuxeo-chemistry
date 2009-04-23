@@ -23,6 +23,7 @@ import org.nuxeo.chemistry.client.ContentManagerException;
 import org.nuxeo.chemistry.client.app.APPConnection;
 import org.nuxeo.chemistry.client.app.Request;
 import org.nuxeo.chemistry.client.app.Response;
+import org.nuxeo.chemistry.client.common.atom.BuildContext;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
@@ -58,7 +59,7 @@ public class FeedDescriptor {
         APPConnection session = (APPConnection)service.getConnection();
         Request req = new Request(url);
         Response resp = session.getConnector().get(req);
-        return (List)resp.getFeed(service.getConnection(), ObjectEntry.class);
+        return (List)resp.getFeed(new BuildContext(service.getConnection()), ObjectEntry.class);
     }
 
     public List<ObjectEntry> query(String query) throws ContentManagerException {
@@ -66,7 +67,7 @@ public class FeedDescriptor {
         Request req = new Request(url);
         req.setParameter("query", query);
         Response resp = session.getConnector().get(req);
-        return (List)resp.getFeed(service.getConnection(), ObjectEntry.class);
+        return (List)resp.getFeed(new BuildContext(service.getConnection()), ObjectEntry.class);
     }
 
     public List<ObjectEntry> query(int offset, int pageSize) throws ContentManagerException {
@@ -75,7 +76,7 @@ public class FeedDescriptor {
         req.setParameter("offset", Integer.toString(offset));
         req.setParameter("length", Integer.toString(pageSize));
         Response resp = session.getConnector().get(req);
-        return (List)resp.getFeed(service.getConnection(), ObjectEntry.class);
+        return (List)resp.getFeed(new BuildContext(service.getConnection()), ObjectEntry.class);
     }
 
     public List<ObjectEntry> query(String query, int offset, int pageSize) throws ContentManagerException {
@@ -85,7 +86,7 @@ public class FeedDescriptor {
         req.setParameter("offset", Integer.toString(offset));
         req.setParameter("length", Integer.toString(pageSize));
         Response resp = session.getConnector().get(req);
-        return (List)resp.getFeed(service.getConnection(), ObjectEntry.class);
+        return (List)resp.getFeed(new BuildContext(service.getConnection()), ObjectEntry.class);
     }
 
 }

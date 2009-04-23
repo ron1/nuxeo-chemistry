@@ -31,7 +31,7 @@ import org.apache.chemistry.repository.RepositoryInfo;
 import org.apache.chemistry.type.Type;
 import org.nuxeo.chemistry.client.ContentManager;
 import org.nuxeo.chemistry.client.ContentManagerException;
-import org.nuxeo.chemistry.client.app.xml.TypeFeedReader;
+import org.nuxeo.chemistry.client.common.atom.BuildContext;
 
 /**
  * An APP client repository proxy
@@ -141,18 +141,20 @@ public class APPRepository implements Repository {
                     throw new IllegalArgumentException("Invalid CMIS repository. No types children collection defined");
                 }
                 Request req = new Request(href);
+                //TODO lazy load property definition
+                req.setHeader("CMIS-includePropertyDefinitions", "true");
                 Response resp = cm.connector.get(req);
                 if (!resp.isOk()) {
                     throw new ContentManagerException("Remote server returned error code: "+resp.getStatusCode());
                 }        
                 InputStream in = resp.getStream();
                 try {
-                    typeRegistry = TypeFeedReader.INSTANCE.read(this, in);
+                    typeRegistry = TypeFeedReader.INSTANCE.read(new BuildContext(this), in);
                 } finally {
                     in.close();
                 }
             } catch (Exception e) { //TODO how to handle exceptions?
-                throw new RuntimeException("Failed to load repsotory types for "+getName(), e);
+                throw new RuntimeException("Failed to load repository types for "+getName(), e);
             }
         }
     }

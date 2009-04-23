@@ -16,163 +16,141 @@
  */
 package org.nuxeo.chemistry.client.app;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Calendar;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.chemistry.Document;
 import org.apache.chemistry.Folder;
 import org.apache.chemistry.ObjectEntry;
 import org.apache.chemistry.Policy;
 import org.apache.chemistry.Relationship;
+import org.apache.chemistry.atompub.CMIS;
 import org.apache.chemistry.property.Property;
 import org.apache.chemistry.type.Type;
-import org.nuxeo.chemistry.client.app.model.DataMap;
+import org.nuxeo.chemistry.client.common.atom.BuildContext;
+import org.nuxeo.chemistry.client.common.atom.ValueAdapter;
+import org.nuxeo.chemistry.client.common.atom.XmlProperty;
+import org.nuxeo.chemistry.client.common.xml.XMLWriter;
 
 /**
- * A compact representation of an object entry to be used on ATOM clients.
- * 
- * TODO: use state to cache boolean properties?
- * 
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
 public class APPObjectEntry extends AbstractObjectEntry {
 
-    protected APPConnection connection;    
+    protected APPConnection connection;
+    protected Map<String, XmlProperty> properties;
+    protected Set<String> allowableActions; //TODO use set?
     
-    protected URI uri;
     protected String id;
     protected String name;
     protected String typeId;
-    protected String createdBy;
-    protected Calendar lastModificationDate;
-    
-    protected int state; //TODO locked, lifecycle etc?
 
-    protected DataMap map;
-    
-    /**
-     * For internal use - clients must use the other constructor.
-     */
     public APPObjectEntry(APPConnection connection) {
-        this (connection, null);
+        this (connection, new HashMap<String, XmlProperty>(), new HashSet<String>());
     }
-
-    public APPObjectEntry(APPConnection connection, DataMap properties) {
+    
+    public APPObjectEntry(APPConnection connection, Map<String, XmlProperty> properties, Set<String> allowableActions) {
         this.connection = connection;
-        init(properties);
-    }
-    
-    public void init(DataMap map) {
-        this.map = map;
-    }
+        this.properties = properties;
+        this.allowableActions = allowableActions;
+    }    
 
-    /**
-     * To be used only internally by serializers
-     * @return
-     */
-    public DataMap getDataMap() {
-        return map;
-    }
-    
-    @Override
-    public Connector getConnector() {
-        return connection.connector;
-    }
-    
     public APPConnection getConnection() {
         return connection;
     }
     
-    public Serializable getValue(String name) {
-        return (Serializable)map.get(name);
-    }        
-
-    public URI getURI() {
-        if (uri == null) {
-            String value = getEditLink();
-            if (uri == null) {
-                value = getLink("self");
-                if (uri == null) {
-                    value = getLink("alternate");
-                }
-            }
-            try {
-                uri = new URI(value);
-            } catch (URISyntaxException e) {
-                throw new IllegalArgumentException("Not an URI: "+value);
-            }
-        }
-        return null;
+    public Collection<String> getAllowableActions() {
+        return allowableActions;
     }
-        
+
+    public Serializable getValue(String name) {
+        XmlProperty p = properties.get(name);
+        return p != null ? p.getValue() : null;
+    }
+
+    @Override
+    public Connector getConnector() {
+        return connection.getConnector();
+    }
+
+    @Override
     public String getTypeId() {
         if (typeId == null) {
-            typeId = getString(Property.TYPE_ID);
+            typeId = super.getTypeId();
         }
-        return typeId;
+        return super.getTypeId();
     }
-    
+
+    @Override
     public String getId() {
         if (id == null) {
-            id = getString(Property.ID);
+            id = super.getId();
         }
         return id;
     }
-
+    
+    @Override
     public String getName() {
         if (name == null) {
-            name = getString(Property.NAME);
-            if (name == null) {
-                name = getId();
-            }
+            name = super.getName();
         }
         return name;
     }
     
-    public String getCreatedBy() {
-        if (createdBy == null) {
-            createdBy = getString(Property.CREATED_BY);
-        }
-        return createdBy;
-    }
-    
-    public Calendar getLastModificationDate() {
-        if (lastModificationDate == null) {
-            lastModificationDate = getDateTime(Property.LAST_MODIFICATION_DATE);
-        }
-        return lastModificationDate;
-    }
-        
     public Type getType() {
         return connection.getRepository().getType(getTypeId());
     }
     
     public Document getDocument() {
-        return getRemoteEntity(getEditLink(), APPDocument.class);
+        APPDocument doc = getRemoteEntity(
+                new BuildContext(getConnection(), getType()), 
+                getEditLink(), APPDocument.class); 
+        return doc;
     }
     
     public Folder getFolder() {
-        return getRemoteEntity(getEditLink(), APPFolder.class);
+        return getRemoteEntity(new BuildContext(getConnection(), getType()), 
+                getEditLink(), APPFolder.class);
     }
 
-    public Policy getPolicy() {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-
-    public Collection<String> getAllowableActions() {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
-    
+    @SuppressWarnings("unchecked")
     public Map<String, Property> getProperties() {
-        throw new UnsupportedOperationException("Not yet implemented");
+        return (Map)properties;
     }
     
     public Property getProperty(String name) {
+        return properties.get(name); 
+    }
+
+    public URI getURI() {
+        String value = getEditLink();
+        if (value == null) {
+            value = getLink("self");
+            if (value == null) {
+                value = getLink("alternate");
+            }
+        }
+        try {
+            return new URI(value);
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException("Not an URI: "+value);
+        }
+    }
+
+    public boolean hasContentStream() {
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    public Policy getPolicy() {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
@@ -183,13 +161,51 @@ public class APPObjectEntry extends AbstractObjectEntry {
     public Collection<ObjectEntry> getRelationships() {
         throw new UnsupportedOperationException("Not yet implemented");
     }
-
-    public boolean hasContentStream() {
-        throw new UnsupportedOperationException("Not yet implemented");
-    }
     
     @Override
     public String toString() {
         return getName();
     }
+    
+
+    public void writeObjectTo(XMLWriter xw) throws IOException {
+        xw.element(CMIS.OBJECT);
+        xw.start();
+        xw.element(CMIS.PROPERTIES);
+        xw.start();
+        for (XmlProperty p : properties.values()) {
+            ValueAdapter va = p.getAdapter();
+            xw.element(va.getPropertyName()).attr(CMIS.NAME, p.getName());
+            xw.start();            
+            if (p.isValueLoaded()) {                
+                Serializable v = p.getValue();
+                if (v != null) {
+                    if (v.getClass().isArray()) {
+                        Serializable[] ar = (Serializable[])v;
+                        for (Serializable val : ar) {
+                            xw.element(CMIS.VALUE).content(va.writeValue(val));
+                        }                        
+                    } else {
+                        xw.element(CMIS.VALUE).content(va.writeValue(v));
+                    }
+                }
+            } else {
+                Object v = p.getXmlValue();
+                if (v != null) {
+                    if (v.getClass() == String.class) {
+                        xw.element(CMIS.VALUE).content((String)v);
+                    } else {
+                        List<String> list = (List<String>)v;
+                        for (String val : list) {
+                            xw.element(CMIS.VALUE).content(val);    
+                        }
+                    }
+                }
+            }
+            xw.end();
+        }
+        xw.end();
+        xw.end();
+    }
+    
 }

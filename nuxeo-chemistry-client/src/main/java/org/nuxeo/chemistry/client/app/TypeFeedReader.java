@@ -14,35 +14,38 @@
  * Contributors:
  *     bstefanescu
  */
-package org.nuxeo.chemistry.client.app.xml;
+package org.nuxeo.chemistry.client.app;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
-import javax.xml.stream.XMLStreamConstants;
-import javax.xml.stream.XMLStreamException;
-
+import org.nuxeo.chemistry.client.common.atom.AbstractFeedBuilder;
 import org.nuxeo.chemistry.client.common.xml.StaxReader;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
-public interface EntryReader<T> extends XMLStreamConstants, ATOM {
+public class TypeFeedReader extends AbstractFeedBuilder<Map<String,APPType>, APPType> {
 
-    public T read(Object context, URL url) throws XMLStreamException, IOException;
+    public final static TypeFeedReader INSTANCE = new TypeFeedReader();  
     
-    public T read(Object context, File file) throws XMLStreamException, IOException;
+    public TypeFeedReader() {
+        super(TypeEntryReader.INSTANCE);
+    }
     
-    public T read(Object context, Reader reader) throws XMLStreamException;
+    @Override
+    protected void addEntry(Map<String,APPType> feed, APPType entry) {
+        feed.put(entry.getId(), entry);
+    }
+
+
+    @Override
+    protected Map<String, APPType> createFeed(StaxReader reader) {
+        return new HashMap<String,APPType>();
+    }
     
-    public T read(Object context, InputStream in) throws XMLStreamException;
     
-    public T read(Object context, StaxReader reader) throws XMLStreamException;
     
-    public T readEntry(Object context, StaxReader reader) throws XMLStreamException;
     
 }

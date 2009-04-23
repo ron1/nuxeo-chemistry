@@ -21,7 +21,7 @@ import java.io.StringWriter;
 
 import javax.xml.namespace.QName;
 
-import org.nuxeo.chemistry.client.app.xml.ATOM;
+import org.nuxeo.chemistry.client.common.atom.ATOM;
 import org.nuxeo.chemistry.client.common.xml.ChildrenNavigator;
 import org.nuxeo.chemistry.client.common.xml.StaxReader;
 import org.nuxeo.chemistry.client.common.xml.XMLWriter;

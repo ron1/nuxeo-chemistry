@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.util.List;
 
 import org.nuxeo.chemistry.client.ContentManagerException;
+import org.nuxeo.chemistry.client.common.atom.BuildContext;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
@@ -51,7 +52,7 @@ public interface Response {
     * @return
     * @throws ContentManagerException
     */
-    <T> T getEntity(Object context, Class<T> clazz) throws ContentManagerException;
+    <T> T getEntity(BuildContext context, Class<T> clazz) throws ContentManagerException;
 
     /**
      * Get a feed object constructed from the response
@@ -61,7 +62,7 @@ public interface Response {
      * @param clazz
      * @return
      */
-     List<?> getFeed(Object context, Class<?> clazz) throws ContentManagerException;
+     List<?> getFeed(BuildContext context, Class<?> clazz) throws ContentManagerException;
 
     boolean isOk();
 

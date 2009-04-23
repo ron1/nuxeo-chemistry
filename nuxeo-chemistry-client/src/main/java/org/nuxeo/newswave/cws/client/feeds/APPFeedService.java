@@ -25,6 +25,7 @@ import org.nuxeo.chemistry.client.app.APPContentManager;
 import org.nuxeo.chemistry.client.app.Request;
 import org.nuxeo.chemistry.client.app.Response;
 import org.nuxeo.chemistry.client.common.AdapterFactory;
+import org.nuxeo.chemistry.client.common.atom.BuildContext;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
@@ -58,7 +59,9 @@ public class APPFeedService implements FeedService {
     public List<FeedDescriptor> getFeeds() throws ContentManagerException {
         Request req = new Request(connection.getBaseUrl()+"/feeds"); // TODO use atom collections
         Response resp = connection.getConnector().get(req);
-        return (List)resp.getFeed(this, FeedDescriptor.class);
+        BuildContext ctx = new BuildContext();
+        ctx.setData("feedService", this);
+        return (List)resp.getFeed(ctx, FeedDescriptor.class);
     }
 
 }

@@ -21,23 +21,19 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.xml.namespace.QName;
 import javax.xml.stream.XMLStreamException;
 
-import org.apache.abdera.Abdera;
-import org.apache.abdera.model.Collection;
-import org.apache.abdera.model.Document;
 import org.apache.abdera.model.Element;
-import org.apache.abdera.model.Service;
 import org.apache.abdera.model.Workspace;
 import org.apache.chemistry.atompub.CMIS;
 import org.apache.chemistry.repository.JoinCapability;
 import org.apache.chemistry.repository.QueryCapability;
 import org.apache.chemistry.repository.RepositoryInfo;
-import org.nuxeo.chemistry.client.app.xml.ATOM;
+import org.nuxeo.chemistry.client.common.atom.ATOM;
+import org.nuxeo.chemistry.client.common.atom.BuildContext;
 import org.nuxeo.chemistry.client.common.xml.ChildrenNavigator;
 import org.nuxeo.chemistry.client.common.xml.StaxReader;
 
@@ -57,8 +53,8 @@ public class APPServiceDocumentHandler implements SerializationHandler<APPServic
         return "application/atom+xml";
     }
 
-    public APPServiceDocument readEntity(Object context, InputStream in) throws IOException {
-        APPContentManager cm = (APPContentManager) context;
+    public APPServiceDocument readEntity(BuildContext context, InputStream in) throws IOException {
+        APPContentManager cm = (APPContentManager)context.getData("cm");
         try {
             StaxReader reader = StaxReader.newReader(in);
             if (!reader.fwdTag("service")) {
@@ -90,26 +86,8 @@ public class APPServiceDocumentHandler implements SerializationHandler<APPServic
         }
     }
     
-    public APPServiceDocument readEntity_old(Object context, InputStream in) throws IOException {
-        APPContentManager cm = (APPContentManager) context;
-        Document<Service> document = Abdera.getInstance().getParser().parse(in);
-        Service atomService = document.getRoot();
-        List<Workspace>  atomWorkspaces = atomService.getWorkspaces();
-        APPRepository repos[] = new APPRepository[atomWorkspaces.size()];
-        int i = 0;
-        for (i = 0; i < repos.length; i++) {
-            Workspace ws = atomWorkspaces.get(i);
-            RepositoryInfo info = getRepositoryInfo(ws);
-            APPRepository repo = new APPRepository(cm, info);            
-            for (Collection col : ws.getCollections()) {
-                repo.addCollection(col.getAttributeValue(CMIS.COLLECTION_TYPE), col.getHref().toASCIIString());
-            }
-            repos[i] = repo;
-        }
-        return new APPServiceDocument(repos);
-    }
 
-    public Feed<APPServiceDocument> readFeed(Object context, InputStream in)
+    public Feed<APPServiceDocument> readFeed(BuildContext context, InputStream in)
             throws IOException {
         throw new UnsupportedOperationException("readFeed not supported for type APPServiceDocument");
     }

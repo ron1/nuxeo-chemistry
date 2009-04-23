@@ -14,27 +14,26 @@
  * Contributors:
  *     bstefanescu
  */
-package org.nuxeo.chemistry.client.app.xml;
+package org.nuxeo.chemistry.client.common.atom;
 
-import org.nuxeo.chemistry.client.app.APPConnection;
-import org.nuxeo.chemistry.client.app.APPFolder;
-import org.nuxeo.chemistry.client.app.APPObjectEntry;
 import org.nuxeo.chemistry.client.common.xml.StaxReader;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
-public class CmisFolderReader extends CmisEntryReader {
+public class DefaultEntryBuilder extends AbstractObjectBuilder<XmlObject> {
+
 
     @Override
-    public APPObjectEntry newEntry(Object context, StaxReader reader) {
-        if (context instanceof APPConnection) {
-            return new APPFolder((APPConnection)context);    
-        } else if (context instanceof APPObjectEntry) {
-            return new APPFolder(((APPObjectEntry)context).getConnection());
-        }
-        throw new IllegalArgumentException("Invalid context object for document creation: "+context);
+    protected XmlObject createObject(BuildContext ctx) {
+        return new XmlObject(ctx.getConnection());
+    }
+    
+    @Override
+    protected void readProperty(BuildContext ctx, StaxReader reader, XmlObject object,
+            XmlProperty p) {
+        object.properties.put(p.getName(), p.getValue());
     }
     
 }
