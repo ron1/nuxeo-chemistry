@@ -53,11 +53,11 @@ public class APPDocument extends APPObjectEntry implements Document {
         p.setValueUnsafe(typeId);
         properties.put(p.getName(), p);
 
-        if (parentId != null) {
-            p = new XmlProperty(type.getPropertyDefinition(Property.PARENT_ID), (String)null);
-            p.setValueUnsafe(parentId);
-            properties.put(p.getName(), p);
-        }
+//        if (parentId != null) {
+//            p = new XmlProperty(type.getPropertyDefinition(Property.PARENT_ID), (String)null);
+//            p.setValueUnsafe(parentId);
+//            properties.put(p.getName(), p);
+//        }
     }
 
     public APPDocument(APPConnection connection, Map<String,XmlProperty> properties) {

@@ -154,7 +154,6 @@ public class APPConnection implements Connection {
      * Versions not yet supported
      */
     public CMISObject getObject(String objectId, ReturnVersion returnVersion) {
-        String rootId = repository.getInfo().getRootFolderId();
         String href = repository.getCollectionHref("root-children");        
         int p = href.lastIndexOf("/");
         if (p == href.length()-1) {
@@ -163,7 +162,7 @@ public class APPConnection implements Connection {
         if (p > -1) {
             href = href.substring(0, p+1);            
         }
-        href += "objects/"+rootId;
+        href += "objects/"+objectId;
         Request req = new Request(href);
         Response resp = connector.get(req);
         if (!resp.isOk()) {
