@@ -55,6 +55,11 @@
       </dependency>
       <dependency>
 	<groupId>org.apache.chemistry</groupId>
+	<artifactId>chemistry-commons</artifactId>
+	<version>${chemistry.version}</version>
+      </dependency>      
+      <dependency>
+	<groupId>org.apache.chemistry</groupId>
 	<artifactId>chemistry-atompub</artifactId>
 	<version>${chemistry.version}</version>
       </dependency>
