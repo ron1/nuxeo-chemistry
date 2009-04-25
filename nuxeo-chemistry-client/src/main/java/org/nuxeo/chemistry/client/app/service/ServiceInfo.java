@@ -18,6 +18,8 @@ package org.nuxeo.chemistry.client.app.service;
 
 import java.lang.reflect.Constructor;
 
+import org.nuxeo.chemistry.client.app.APPContentManager;
+
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
@@ -32,6 +34,7 @@ public class ServiceInfo {
     
     public String href;    
     
+    protected Class<?> itf;
     protected Constructor<?> ctor;
     protected boolean isSingleton;
     protected boolean requiresConnection;
@@ -84,7 +87,11 @@ public class ServiceInfo {
     public Constructor<?> getServiceCtor() {
         if (ctor == null) {
             try {
-                Class<?> clazz = Class.forName(id);
+                Class<?> itf = Class.forName(id);
+                Class<?> clazz = APPContentManager.getServiceClass(itf);
+                if (clazz == null) { // no service registered for the given interface
+                    return null;
+                }
                 ExtensionService anno = clazz.getAnnotation(ExtensionService.class);
                 if (anno == null) {
                     throw new IllegalStateException("Class "+clazz+" is not an extension service!");
@@ -100,7 +107,24 @@ public class ServiceInfo {
     }
     
     public Class<?> getServiceClass() {
-        return getServiceCtor().getDeclaringClass();        
+        Constructor<?> ctor = getServiceCtor();
+        return ctor == null ? null : ctor.getDeclaringClass();
     }
-    
+
+    public Class<?> getInterfaceClass() {
+        return itf;        
+    }
+
+    public Object newInstance(ServiceContext ctx) {
+        Constructor<?> ctor = getServiceCtor();
+        if (ctor == null) {
+            return null;
+        }
+        try {
+            return ctor.newInstance(new Object[] {ctx});
+        } catch (Exception e) {
+            e.printStackTrace();// TODO handle errors
+            return null;
+        }
+    }
 }

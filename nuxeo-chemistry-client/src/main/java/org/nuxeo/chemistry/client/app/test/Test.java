@@ -25,8 +25,11 @@ import org.apache.chemistry.ObjectEntry;
 import org.apache.chemistry.repository.Repository;
 import org.apache.chemistry.type.Type;
 import org.nuxeo.chemistry.client.app.APPContentManager;
+import org.nuxeo.chemistry.client.app.APPRepository;
 import org.nuxeo.chemistry.client.app.APPType;
 import org.nuxeo.chemistry.client.common.Navigator;
+import org.nuxeo.newswave.cws.client.feeds.APPFeedService;
+import org.nuxeo.newswave.cws.client.feeds.FeedService;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
@@ -100,6 +103,10 @@ public class Test {
         entry = nav.resolve("/default-domain/workspaces/some_folder");        
         System.out.println("entry modif title: "+entry.getString("dc:title"));
 
+        APPContentManager.registerService(FeedService.class, APPFeedService.class);
+        FeedService fs = ((APPRepository)repo).getService(FeedService.class);
+        System.out.println(fs);
+        
     }
 
 }

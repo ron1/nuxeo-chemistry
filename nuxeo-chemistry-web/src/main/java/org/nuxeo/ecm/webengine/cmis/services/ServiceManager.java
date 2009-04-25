@@ -27,27 +27,27 @@ import org.apache.chemistry.Connection;
  */
 public class ServiceManager {
 
-    protected Map<String, ServiceDescriptor> factories = new ConcurrentHashMap<String, ServiceDescriptor>();
+    protected Map<String, ServiceDescriptor> services = new ConcurrentHashMap<String, ServiceDescriptor>();
     
     private static ServiceManager instance = new ServiceManager();
     public static ServiceManager getInstance() {
         return instance;
     }
     
-    public ServiceDescriptor getServiceFactory(Connection conn, String id) {
-        return factories.get(id);
+    public ServiceDescriptor getServiceDescriptor(String id) {
+        return services.get(id);
     }
     
-    public void registerServiceFactory(ServiceDescriptor factory) {
-        factories.put(factory.getId(), factory);
+    public void registerService(ServiceDescriptor sd) {
+        services.put(sd.getId(), sd);
     }
 
-    public void unregisterServiceFactory(String id) {
-        factories.remove(id);
+    public void unregisterService(String id) {
+        services.remove(id);
     }
     
-    public ServiceDescriptor[] getServiceFactories() {
-        return (ServiceDescriptor[])factories.values().toArray();
+    public ServiceDescriptor[] getServices() {
+        return services.values().toArray(new ServiceDescriptor[services.size()]);
     }
     
 }

@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Date;
 
 import org.apache.abdera.i18n.iri.IRI;
+import org.apache.abdera.model.Text;
 import org.apache.abdera.protocol.server.RequestContext;
 import org.apache.abdera.protocol.server.context.ResponseContextException;
 import org.apache.chemistry.ObjectEntry;
@@ -34,7 +35,7 @@ import org.nuxeo.ecm.webengine.cmis.adapters.EmptyCollection;
 public class ServicesCollection extends EmptyCollection<ServiceDescriptor> {
 
     public ServicesCollection(String name, Repository repository) {
-        super (name, "Nuxeo Services", repository);
+        super (name, "Extension Services", repository);
     }
     
     @Override
@@ -63,7 +64,7 @@ public class ServicesCollection extends EmptyCollection<ServiceDescriptor> {
     @Override
     public Iterable<ServiceDescriptor> getEntries(RequestContext request)
             throws ResponseContextException {
-        return Arrays.asList(ServiceManager.getInstance().getServiceFactories());
+        return Arrays.asList(ServiceManager.getInstance().getServices());
     }
 
     @Override
@@ -72,6 +73,13 @@ public class ServicesCollection extends EmptyCollection<ServiceDescriptor> {
         return entry.getDescription();
     }
 
+//    @Override
+//    public Text getSummary(ServiceDescriptor entry, RequestContext request)
+//            throws ResponseContextException {
+//        Text summary = request.getAbdera().getFactory().newSummary();
+//        summary.setText(entry.getDescription());
+//        return summary;
+//    }
 
     @Override
     public String getId(ServiceDescriptor entry) throws ResponseContextException {

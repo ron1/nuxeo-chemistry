@@ -34,6 +34,8 @@ import org.nuxeo.ecm.webengine.cmis.adapters.CMISCollection;
 import org.nuxeo.ecm.webengine.cmis.adapters.EmptyCollection;
 import org.nuxeo.ecm.webengine.cmis.adapters.ObjectChildrenCollection;
 import org.nuxeo.ecm.webengine.cmis.adapters.TypesCollection;
+import org.nuxeo.ecm.webengine.cmis.services.ServiceDescriptor;
+import org.nuxeo.ecm.webengine.cmis.services.ServiceManager;
 import org.nuxeo.ecm.webengine.cmis.services.ServicesCollection;
 import org.nuxeo.ecm.webengine.model.Resource;
 import org.nuxeo.ecm.webengine.model.WebContext;
@@ -49,6 +51,16 @@ import org.nuxeo.runtime.api.Framework;
 @Consumes({"application/atom+xml;type=entry", "*/*"})
 public class CMISServiceResource extends ServiceResource {
 
+    
+    static {
+        ServiceDescriptor sd = new ServiceDescriptor("org.nuxeo.newswave.cws.client.feeds.FeedService");
+        sd.setTitle("Feed Service");
+        sd.setUrl("/feeds");
+        sd.setDescription("CWS Feed service");
+        ServiceManager.getInstance().registerService(sd);
+    }
+    
+    
     private static ServiceInfo info = null;
 
     

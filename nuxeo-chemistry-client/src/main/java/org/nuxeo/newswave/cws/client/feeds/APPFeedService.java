@@ -22,8 +22,11 @@ import org.apache.chemistry.Connection;
 import org.nuxeo.chemistry.client.ContentManagerException;
 import org.nuxeo.chemistry.client.app.APPConnection;
 import org.nuxeo.chemistry.client.app.APPContentManager;
+import org.nuxeo.chemistry.client.app.APPRepository;
 import org.nuxeo.chemistry.client.app.Request;
 import org.nuxeo.chemistry.client.app.Response;
+import org.nuxeo.chemistry.client.app.service.ExtensionService;
+import org.nuxeo.chemistry.client.app.service.ServiceContext;
 import org.nuxeo.chemistry.client.common.AdapterFactory;
 import org.nuxeo.chemistry.client.common.atom.BuildContext;
 
@@ -31,11 +34,15 @@ import org.nuxeo.chemistry.client.common.atom.BuildContext;
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
+@ExtensionService
 public class APPFeedService implements FeedService {
 
     protected APPConnection connection;
 
-    public static void install(APPContentManager cm) {
+    public APPFeedService(ServiceContext ctx) {
+        String href = ctx.getInfo().getHref();
+        //TODO use href to configure the service 
+        APPContentManager cm = (APPContentManager)((APPRepository)ctx.getRepository()).getContentManager();
         cm.registerSerializationHandler(new APPFeedsHandler());
         cm.registerAdapters(Connection.class, new AdapterFactory() {
             public Class<?>[] getAdapterTypes() {
@@ -44,9 +51,9 @@ public class APPFeedService implements FeedService {
             public <T> T getAdapter(Object obj, Class<T> adapter) {
                 return (T)new APPFeedService((APPConnection)obj);
             }
-        });
+        });        
     }
-
+    
     public APPFeedService(APPConnection session) {
         this.connection = session;
     }

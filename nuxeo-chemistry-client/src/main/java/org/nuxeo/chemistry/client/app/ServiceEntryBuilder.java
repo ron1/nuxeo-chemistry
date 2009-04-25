@@ -49,7 +49,7 @@ public class ServiceEntryBuilder extends AbstractEntryBuilder<ServiceInfo> {
                 throw new ParseException("Invalid service id. "+id);
             }
             id = id.substring(p+1);
-            object.setTitle(id);
+            object.setId(id);
         } else if ("link".equals(name)) {
             String rel = reader.getAttributeValue("rel"); 
             if ("edit".equals(rel)) {
@@ -57,7 +57,7 @@ public class ServiceEntryBuilder extends AbstractEntryBuilder<ServiceInfo> {
             }
         } else if ("title".equals(name)) {
             object.setTitle(reader.getElementText());
-        } else if ("summary".equals(name)) {
+        } else if ("content".equals(name)) {
             object.setSummary(reader.getElementText());
         }
     }

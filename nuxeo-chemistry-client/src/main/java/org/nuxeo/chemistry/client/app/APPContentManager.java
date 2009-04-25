@@ -45,7 +45,6 @@ public class APPContentManager implements ContentManager {
 
     protected SerializationManager serializationMgr;
     
-    protected AdapterManager adapters;
     protected APPServiceDocument app;
     
     protected CredentialsProvider login;
@@ -66,7 +65,7 @@ public class APPContentManager implements ContentManager {
         this.baseUrl = url;
         this.connector = connector;
         this.serializationMgr = serializationMgr;
-        this.adapters = adapterManager;
+        this.adapterMgr = adapterManager;
         initialize();
     }
 
@@ -97,19 +96,19 @@ public class APPContentManager implements ContentManager {
     }
 
     public AdapterManager getAdapterManager() {
-        return adapters;
+        return adapterMgr;
     }
 
     public synchronized AdapterFactory getAdapterFactory(Class<?> adaptee, Class<?> adapter) {
-        return adapters.getAdapterFactory(adaptee, adapter);
+        return adapterMgr.getAdapterFactory(adaptee, adapter);
     }
 
     public <T> T getAdapter(Object adaptee, Class<T> adapter) {
-        return adapters.getAdapter(adaptee, adapter);
+        return adapterMgr.getAdapter(adaptee, adapter);
     }
 
     public void registerAdapters(Class<?> clazz, AdapterFactory factory) {
-        adapters.registerAdapters(clazz, factory);
+        adapterMgr.registerAdapters(clazz, factory);
     }
 
 
@@ -224,5 +223,5 @@ public class APPContentManager implements ContentManager {
     public static Class<?> getServiceClass(Class<?> itf) {
         return services.get(itf);
     }
-    
+
 }

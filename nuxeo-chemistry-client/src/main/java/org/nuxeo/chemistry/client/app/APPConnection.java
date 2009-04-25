@@ -17,7 +17,9 @@
 package org.nuxeo.chemistry.client.app;
 
 import java.util.Collection;
+import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.chemistry.CMISObject;
 import org.apache.chemistry.Connection;
@@ -33,6 +35,8 @@ import org.apache.chemistry.Unfiling;
 import org.apache.chemistry.atompub.CMIS;
 import org.apache.chemistry.repository.Repository;
 import org.nuxeo.chemistry.client.ContentManagerException;
+import org.nuxeo.chemistry.client.app.service.ServiceContext;
+import org.nuxeo.chemistry.client.app.service.ServiceInfo;
 import org.nuxeo.chemistry.client.common.atom.BuildContext;
 
 /**
@@ -45,6 +49,7 @@ public class APPConnection implements Connection {
     
     protected Connector connector;
     protected APPRepository repository;
+    protected Map<Class<?>, Object> singletons = new Hashtable<Class<?>, Object>();
 
 
     public APPConnection(APPRepository repo) {
@@ -234,5 +239,44 @@ public class APPConnection implements Connection {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
+    
+    /**
+     * Get an extension service in connection scope 
+     * @param <T>
+     * @param clazz service interface class
+     * @param connection the connection to bound the service on
+     * @return the service instance or null if none
+     */
+    public <T> T getService(Class<T> clazz) {
+        repository.loadServices(); // be sure services information is loaded
+        ServiceInfo info = repository.services.get(clazz);
+        if (info != null) {
+            if (info.isSingleton()) {
+                Object service = getSingletonService(clazz);
+                if (service != null) {
+                    return (T)service;
+                }
+            }
+            ServiceContext ctx = new ServiceContext(info, this);
+            try {
+                Object service = info.newInstance(ctx);
+                if (info.isSingleton()) {
+                    putSingletonService(clazz, service);
+                }
+                return (T)service;
+            } catch (Exception e) {
+                // do nothing
+            }
+        }
+        return null;
+    }
+
+    protected void putSingletonService(Class<?> clazz, Object service) {
+        singletons.put(clazz, service);
+    }
+    
+    protected Object getSingletonService(Class<?> clazz) {
+        return singletons.get(clazz);
+    }
 
 }

@@ -24,28 +24,27 @@ import org.nuxeo.ecm.webengine.abdera.AbderaService;
 import org.nuxeo.ecm.webengine.atom.CollectionResource;
 import org.nuxeo.ecm.webengine.cmis.CMISWorkspaceInfo;
 import org.nuxeo.ecm.webengine.model.WebObject;
+import org.nuxeo.ecm.webengine.model.impl.DefaultObject;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
 @WebObject(type="CmisServices")
-public class ServicesCollectionResource extends CollectionResource {
+public class ServicesCollectionResource extends DefaultObject {
     
     protected static ServicesCollection adapter;
     
     protected CMISWorkspaceInfo ws;
     protected String id;
 
-    @Override
-    protected void initialize(Object... args) {
+    protected void initialize(Object... args) {        
         this.ws = (CMISWorkspaceInfo)args[0];
     }
        
     public Repository getRepository() {
         return ws.getRepository();
-    }
-    
+    }    
     
     @GET
     public Response doGet() {

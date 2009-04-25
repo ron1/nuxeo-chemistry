@@ -16,7 +16,6 @@
  */
 package org.nuxeo.chemistry.client.app;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URI;
@@ -203,36 +202,6 @@ public class APPRepository implements Repository {
         return singletons.get(clazz);
     }
     
-    /**
-     * Get an extension service in connection scope 
-     * @param <T>
-     * @param clazz service interface class
-     * @param connection the connection to bound the service on
-     * @return the service instance or null if none
-     */
-    public <T> T getService(Class<T> clazz, Connection connection) {
-        loadServices(); // be sure services information is loaded
-        ServiceInfo info = services.get(clazz);
-        if (info != null) {
-            if (info.isSingleton()) {
-                Object service = getSingletonService(clazz);
-                if (service != null) {
-                    return (T)service;
-                }
-            }
-            ServiceContext ctx = new ServiceContext(info, connection);
-            try {
-                Object service = info.getServiceCtor().newInstance(new Object[] {ctx});
-                if (info.isSingleton()) {
-                    putSingletonService(clazz, service);
-                }
-                return (T)service;
-            } catch (Exception e) {
-                // do nothing
-            }
-        }
-        return null;
-    }
 
     /**
      * Get an extension service in repository scope 
@@ -243,7 +212,7 @@ public class APPRepository implements Repository {
      */
     public <T> T getService(Class<T> clazz) {
         loadServices(); // be sure services information is loaded
-        ServiceInfo info = services.get(clazz);
+        ServiceInfo info = services.get(clazz.getName());
         if (info != null) {
             if (info.requiresConnection()) {
                 return null;
@@ -256,7 +225,7 @@ public class APPRepository implements Repository {
             }
             ServiceContext ctx = new ServiceContext(info, this);
             try {
-                Object service = info.getServiceCtor().newInstance(new Object[] {ctx});
+                Object service = info.newInstance(ctx);
                 if (info.isSingleton()) {
                     putSingletonService(clazz, service);
                 }
