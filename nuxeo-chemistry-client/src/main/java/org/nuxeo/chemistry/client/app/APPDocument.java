@@ -43,16 +43,12 @@ public class APPDocument extends APPObjectEntry implements Document {
     
 
     public APPDocument(APPConnection connection, String typeId) {
-        this (connection, typeId, null);
-    }
-
-    public APPDocument(APPConnection connection, String typeId, String parentId) {
         this (connection, new HashMap<String, XmlProperty>());
         Type type = connection.getRepository().getType(typeId);
         XmlProperty p = new XmlProperty(type.getPropertyDefinition(Property.TYPE_ID), (String)null);
         p.setValueUnsafe(typeId);
         properties.put(p.getName(), p);
-
+//TODO a document doesn;t have the parent id property
 //        if (parentId != null) {
 //            p = new XmlProperty(type.getPropertyDefinition(Property.PARENT_ID), (String)null);
 //            p.setValueUnsafe(parentId);

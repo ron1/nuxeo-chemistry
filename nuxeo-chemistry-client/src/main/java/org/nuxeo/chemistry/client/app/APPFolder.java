@@ -24,6 +24,7 @@ import org.apache.chemistry.Document;
 import org.apache.chemistry.Folder;
 import org.apache.chemistry.ObjectEntry;
 import org.apache.chemistry.atompub.CMIS;
+import org.apache.chemistry.property.Property;
 import org.apache.chemistry.type.BaseType;
 import org.nuxeo.chemistry.client.common.atom.XmlProperty;
 
@@ -39,7 +40,13 @@ public class APPFolder extends APPDocument implements Folder {
     }
 
     public APPFolder(APPConnection connection, String typeId, String parentId) {
-        super (connection, typeId, parentId);
+        super (connection, typeId);
+
+        if (parentId != null) {
+            XmlProperty p = new XmlProperty(getType().getPropertyDefinition(Property.PARENT_ID), (String)null);
+            p.setValueUnsafe(parentId);
+            properties.put(p.getName(), p);
+        }
     }
 
 
@@ -63,7 +70,7 @@ public class APPFolder extends APPDocument implements Folder {
     }
     
     public Document newDocument(String typeId) {
-        APPDocument doc = new APPDocument(connection, typeId, getId());
+        APPDocument doc = new APPDocument(connection, typeId);
         doc.addLink(CMIS.LINK_PARENT, getEditLink());
         return doc;
     }

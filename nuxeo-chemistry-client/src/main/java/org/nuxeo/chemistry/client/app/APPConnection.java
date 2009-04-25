@@ -154,6 +154,9 @@ public class APPConnection implements Connection {
      * Versions not yet supported
      */
     public CMISObject getObject(String objectId, ReturnVersion returnVersion) {
+		if (returnVersion == null) {
+            returnVersion = ReturnVersion.THIS;
+        }		
         String href = repository.getCollectionHref("root-children");        
         int p = href.lastIndexOf("/");
         if (p == href.length()-1) {

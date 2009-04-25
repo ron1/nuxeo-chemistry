@@ -39,7 +39,6 @@ public class XmlProperty implements Property {
     protected Serializable value = NULL;
     protected Object xmlValue;
     
-    
     public XmlProperty() {
         
     }

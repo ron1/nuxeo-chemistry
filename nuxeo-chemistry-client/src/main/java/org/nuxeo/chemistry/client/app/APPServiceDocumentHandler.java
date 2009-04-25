@@ -54,7 +54,7 @@ public class APPServiceDocumentHandler implements SerializationHandler<APPServic
     }
 
     public APPServiceDocument readEntity(BuildContext context, InputStream in) throws IOException {
-        APPContentManager cm = (APPContentManager)context.getData("cm");
+        APPContentManager cm = (APPContentManager)context.get(APPContentManager.class);
         try {
             StaxReader reader = StaxReader.newReader(in);
             if (!reader.fwdTag("service")) {

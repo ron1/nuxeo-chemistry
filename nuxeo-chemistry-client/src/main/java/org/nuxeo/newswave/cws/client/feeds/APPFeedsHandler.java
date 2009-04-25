@@ -46,7 +46,7 @@ public class APPFeedsHandler implements SerializationHandler<FeedDescriptor> {
 
     public org.nuxeo.chemistry.client.app.Feed<FeedDescriptor> readFeed(BuildContext context,
             InputStream in) throws IOException {
-        APPFeedService service = (APPFeedService)context.getData("feedService");
+        APPFeedService service = (APPFeedService)context.get(APPFeedService.class);
         Document<Feed> document = Abdera.getInstance().getParser().parse(in);
         List<Entry> entries = document.getRoot().getEntries();
         DefaultFeed<FeedDescriptor> feeds = new DefaultFeed<FeedDescriptor>(entries.size());

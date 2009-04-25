@@ -16,11 +16,13 @@
  */
 package org.nuxeo.chemistry.client.app;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URI;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +33,8 @@ import org.apache.chemistry.repository.RepositoryInfo;
 import org.apache.chemistry.type.Type;
 import org.nuxeo.chemistry.client.ContentManager;
 import org.nuxeo.chemistry.client.ContentManagerException;
+import org.nuxeo.chemistry.client.app.service.ServiceContext;
+import org.nuxeo.chemistry.client.app.service.ServiceInfo;
 import org.nuxeo.chemistry.client.common.atom.BuildContext;
 
 /**
@@ -44,6 +48,8 @@ public class APPRepository implements Repository {
     protected APPContentManager cm;
     protected RepositoryInfo info;
     protected String id;
+
+    protected Map<String, ServiceInfo> services;
     
     protected Map<String, APPType> typeRegistry; 
     
@@ -51,6 +57,10 @@ public class APPRepository implements Repository {
     protected Map<String,String> collections =
         new HashMap<String,String>();
 
+    protected Map<Class<?>, Object> singletons = new Hashtable<Class<?>, Object>();
+    
+    
+    
     public APPRepository(APPContentManager cm) {
         this (cm, null);
     }
@@ -159,8 +169,109 @@ public class APPRepository implements Repository {
         }
     }
 
+    protected void loadServices() {
+        if (services == null) {
+            String href = getCollectionHref("services");
+            if (href != null) {
+                Request req = new Request(href);
+                Response resp = cm.connector.get(req);
+                if (!resp.isOk()) {
+                    throw new ContentManagerException("Remote server returned error code: "+resp.getStatusCode());
+                }        
+                InputStream in = resp.getStream();
+                try {
+                    try {
+                        services = ServiceFeedBuilder.getBuilder().read(new BuildContext(this), in);            
+                    } finally {
+                        in.close();
+                    }
+                } catch (Exception e) {
+                    throw new ContentManagerException("Failed to read response");
+                }        
+            }
+            if (services == null) {
+                services = new HashMap<String, ServiceInfo>();
+            }
+        }
+    }
+    
+    protected void putSingletonService(Class<?> clazz, Object service) {
+        singletons.put(clazz, service);
+    }
+    
+    protected Object getSingletonService(Class<?> clazz) {
+        return singletons.get(clazz);
+    }
+    
+    /**
+     * Get an extension service in connection scope 
+     * @param <T>
+     * @param clazz service interface class
+     * @param connection the connection to bound the service on
+     * @return the service instance or null if none
+     */
+    public <T> T getService(Class<T> clazz, Connection connection) {
+        loadServices(); // be sure services information is loaded
+        ServiceInfo info = services.get(clazz);
+        if (info != null) {
+            if (info.isSingleton()) {
+                Object service = getSingletonService(clazz);
+                if (service != null) {
+                    return (T)service;
+                }
+            }
+            ServiceContext ctx = new ServiceContext(info, connection);
+            try {
+                Object service = info.getServiceCtor().newInstance(new Object[] {ctx});
+                if (info.isSingleton()) {
+                    putSingletonService(clazz, service);
+                }
+                return (T)service;
+            } catch (Exception e) {
+                // do nothing
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get an extension service in repository scope 
+     * @param <T>
+     * @param clazz service interface class
+     * @param repository the repository to bound the service on
+     * @return the service instance or null if none
+     */
+    public <T> T getService(Class<T> clazz) {
+        loadServices(); // be sure services information is loaded
+        ServiceInfo info = services.get(clazz);
+        if (info != null) {
+            if (info.requiresConnection()) {
+                return null;
+            }
+            if (info.isSingleton()) {
+                Object service = getSingletonService(clazz);
+                if (service != null) {
+                    return (T)service;
+                }
+            }
+            ServiceContext ctx = new ServiceContext(info, this);
+            try {
+                Object service = info.getServiceCtor().newInstance(new Object[] {ctx});
+                if (info.isSingleton()) {
+                    putSingletonService(clazz, service);
+                }
+                return (T)service;
+            } catch (Exception e) {
+                // do nothing
+            }
+        }
+        return null;
+    }
+
+    
     @Override
     public String toString() {
         return getName();
     }
+    
 }

@@ -84,7 +84,6 @@ public class StaxReader extends StreamReaderDelegate {
         }
     }
     
-    protected Context ctx;
     protected int depth = 0;
     protected String defNsUri;
     
@@ -98,9 +97,6 @@ public class StaxReader extends StreamReaderDelegate {
         return depth;
     }
     
-    public Context getContext() {
-        return ctx;
-    }
     
     @Override
     public String getElementText() throws XMLStreamException {
@@ -120,23 +116,11 @@ public class StaxReader extends StreamReaderDelegate {
         if (!hasNext()) {
             return false;
         }        
-        if (ctx != null && ctx.done) {
-            return false;
-        }
         int tok = next();
         if (tok == START_ELEMENT) {
             depth++;
         } else if (tok == END_ELEMENT) {
             depth--;            
-        }
-        if (ctx == null) {
-            return true;
-        }
-        if (depth == ctx.depth && tok == END_ELEMENT) {
-            if (ctx.localName.equals(getLocalName()) && ctx.nsUri.equals(getNamespaceURI())) {
-                // context ended
-                ctx.done = true;
-            }
         }
         return true;
     }
@@ -293,35 +277,7 @@ public class StaxReader extends StreamReaderDelegate {
             }
         };
     }
-
     
-    public void push() throws XMLStreamException {
-        if (getEventType() != START_ELEMENT) {
-            throw new IllegalStateException("push must be called in a START_ELEMENT context");
-        }
-        if (ctx == null) {
-            ctx = new Context();
-        } else {
-            Context newCtx = new Context();
-            newCtx.parent = ctx;
-            ctx = newCtx;
-        }
-        ctx.depth = depth-1;
-        ctx.localName = getLocalName();
-        ctx.nsUri = getNamespaceURI();
-    }
-
-    public void pop() throws XMLStreamException {
-        if (ctx == null) {
-            throw new IllegalStateException("Invalid call of pop. No current context exists");
-        }
-        if (!ctx.done) { // fwd the stream until the context end
-            while (fwd());
-        }
-        // pop the context
-        ctx = ctx.parent;
-    }
-
     public String getAttributeValue(String localName) {
         int cnt = getAttributeCount();
         for (int i=0; i<cnt; i++) {

@@ -60,7 +60,7 @@ public class APPFeedService implements FeedService {
         Request req = new Request(connection.getBaseUrl()+"/feeds"); // TODO use atom collections
         Response resp = connection.getConnector().get(req);
         BuildContext ctx = new BuildContext();
-        ctx.setData("feedService", this);
+        ctx.put(APPFeedService.class, this);
         return (List)resp.getFeed(ctx, FeedDescriptor.class);
     }
 

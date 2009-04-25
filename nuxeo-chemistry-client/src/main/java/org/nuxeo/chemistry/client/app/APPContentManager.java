@@ -18,7 +18,9 @@ package org.nuxeo.chemistry.client.app;
 
 
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.chemistry.repository.Repository;
 import org.nuxeo.chemistry.client.ContentManager;
@@ -46,9 +48,10 @@ public class APPContentManager implements ContentManager {
     protected AdapterManager adapters;
     protected APPServiceDocument app;
     
-    protected static ThreadLocal<List<CredentialsProvider>> loginStack = new ThreadLocal<List<CredentialsProvider>>();
     protected CredentialsProvider login;
-    
+
+    protected static ThreadLocal<List<CredentialsProvider>> loginStack = new ThreadLocal<List<CredentialsProvider>>();
+    protected static Map<Class<?>, Class<?>> services = new Hashtable<Class<?>, Class<?>>();
     
 
     public APPContentManager(String url) {
@@ -146,7 +149,7 @@ public class APPContentManager implements ContentManager {
                 throw new ContentManagerException("Remote server returned error code: "+resp.getStatusCode());
             }
             BuildContext ctx = new BuildContext();
-            ctx.setData("cm", this);
+            ctx.put(APPContentManager.class, this);
             app = resp.getEntity(ctx,
                     APPServiceDocument.class);
         }
@@ -213,5 +216,13 @@ public class APPContentManager implements ContentManager {
         login = provider;
     }
 
+     
+    public static void registerService(Class<?> itf, Class<?> impl) {
+        services.put(itf, impl);
+    }
+    
+    public static Class<?> getServiceClass(Class<?> itf) {
+        return services.get(itf);
+    }
     
 }

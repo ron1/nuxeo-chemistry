@@ -17,7 +17,6 @@
 package org.nuxeo.chemistry.client.common.atom;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.chemistry.Connection;
 import org.apache.chemistry.repository.Repository;
@@ -27,12 +26,14 @@ import org.apache.chemistry.type.Type;
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
-public class BuildContext {
+public class BuildContext extends HashMap<Object, Object> {
 
-    protected Connection connection;
+    private static final long serialVersionUID = 1L;
+
     protected Type type;
     protected Repository repository;
-    protected Map<String,Object> data; //TODO use a more compact structure since data has few members
+    protected Connection connection;
+    
     
     public BuildContext() {
         
@@ -61,18 +62,7 @@ public class BuildContext {
         if (repository == null) {
             throw new IllegalArgumentException("A BuildContext must be bound to a repository");
         }
-    }
-
-    public void setData(String key, Object data) {
-        if (this.data == null) {
-            this.data = new HashMap<String, Object>(); 
-        }
-        this.data.put(key, data);
-    }
-
-    public Object getData(String key) {
-        return data != null ? data.get(key) : null; 
-    }
+    }    
 
     public Repository getRepository() {
         return repository;
@@ -85,5 +75,6 @@ public class BuildContext {
     public Type getType() {
         return type;
     }
-            
+
+        
 }
