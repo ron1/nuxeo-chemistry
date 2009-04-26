@@ -20,13 +20,19 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 
+import javax.xml.stream.XMLStreamException;
+
+import org.apache.chemistry.ObjectEntry;
+import org.apache.chemistry.repository.Repository;
+import org.apache.chemistry.type.Type;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpMethod;
 import org.nuxeo.chemistry.client.ContentManagerException;
 import org.nuxeo.chemistry.client.app.Connector;
 import org.nuxeo.chemistry.client.app.Response;
-import org.nuxeo.chemistry.client.common.atom.BuildContext;
+import org.nuxeo.chemistry.client.common.atom.ReadContext;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
@@ -105,26 +111,44 @@ public class HttpClientResponse implements Response {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    public <T> T getEntity(BuildContext context, Class<T> clazz) throws ContentManagerException {        
-        InputStream in = getStream();
+    public ObjectEntry getObject(ReadContext ctx) throws ContentManagerException {
         try {
-            Object result = connector.getSerializationManager().readEntity(context, clazz, in);
-            return (T)result;
-        } catch (Throwable e) {
-            e.printStackTrace();
-            return null;
-        } finally {
-            try {in.close();} catch (IOException e) { e.printStackTrace(); }
+            return connector.getAPPContentManager().getIO().getObjectEntryReader().read(ctx, getStream());
+        } catch (XMLStreamException e) {
+            throw new ContentManagerException(e);
         }
     }
 
-    public List<?> getFeed(BuildContext context, Class<?> clazz) throws ContentManagerException {
-        InputStream in = getStream();
+    public Type getType(ReadContext ctx) throws ContentManagerException {
         try {
-            return connector.getSerializationManager().readFeed(context, clazz, in);
-        } finally {
-            try {in.close();} catch (IOException e) { e.printStackTrace(); }
+            return connector.getAPPContentManager().getIO().getTypeEntryReader().read(ctx, getStream());
+        } catch (XMLStreamException e) {
+            throw new ContentManagerException(e);
+        }
+    }
+    
+    public Map<String,Type> getTypeFeed(ReadContext ctx) throws ContentManagerException {
+        try {
+            return connector.getAPPContentManager().getIO().getTypeFeedReader().read(ctx, getStream());
+        } catch (XMLStreamException e) {
+            throw new ContentManagerException(e);
+        }
+    }
+    
+    public List<ObjectEntry> getObjectFeed(ReadContext ctx) throws ContentManagerException {
+        try {
+            return connector.getAPPContentManager().getIO().getObjectFeedReader().read(ctx, getStream());
+        } catch (XMLStreamException e) {
+            throw new ContentManagerException(e);
+        }
+    }
+    
+    public Repository[] getServiceDocument(ReadContext ctx)
+            throws ContentManagerException {
+        try {
+            return connector.getAPPContentManager().getIO().getServiceDocumentReader().read(ctx, getStream());
+        } catch (IOException e) {
+            throw new ContentManagerException(e);
         }
     }
 

@@ -18,6 +18,9 @@ package org.nuxeo.chemistry.client.app.httpclient;
 
 import java.util.List;
 
+import org.apache.chemistry.ObjectEntry;
+import org.apache.chemistry.repository.Repository;
+import org.apache.chemistry.type.Type;
 import org.apache.commons.httpclient.Credentials;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpMethod;
@@ -27,7 +30,6 @@ import org.apache.commons.httpclient.auth.AuthScheme;
 import org.apache.commons.httpclient.auth.CredentialsNotAvailableException;
 import org.apache.commons.httpclient.auth.CredentialsProvider;
 import org.apache.commons.httpclient.methods.DeleteMethod;
-import org.apache.commons.httpclient.methods.EntityEnclosingMethod;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.HeadMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
@@ -37,7 +39,8 @@ import org.nuxeo.chemistry.client.app.APPContentManager;
 import org.nuxeo.chemistry.client.app.Connector;
 import org.nuxeo.chemistry.client.app.Request;
 import org.nuxeo.chemistry.client.app.Response;
-import org.nuxeo.chemistry.client.app.SerializationManager;
+import org.nuxeo.chemistry.client.common.atom.ReadContext;
+import org.nuxeo.chemistry.client.common.atom.XmlObjectWriter;
 
 
 
@@ -60,10 +63,6 @@ public class HttpClientConnector implements Connector {
 
     public APPContentManager getAPPContentManager() {
         return cm;
-    }
-
-    public SerializationManager getSerializationManager() {
-        return cm.getSerializationManager();
     }
 
 
@@ -91,13 +90,6 @@ public class HttpClientConnector implements Connector {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    protected void setMethodContent(Request request, EntityEnclosingMethod method) throws ContentManagerException {
-        if (request != null) {
-            Object object = request.getContent();
-            method.setRequestEntity(new ObjectRequestEntity(getSerializationManager().getHandler(object.getClass()), object));
-        }
-    }
 
     public Response get(Request request) throws ContentManagerException {
         try {
@@ -135,12 +127,12 @@ public class HttpClientConnector implements Connector {
         }
     }
 
-    public Response post(Request request) throws ContentManagerException {
+    public <T> Response post(Request request, XmlObjectWriter<T> writer, T object) throws ContentManagerException {
         try {
             PostMethod method = new PostMethod(request.getUrl());
             setMethodParams(method, request);
             setMethodHeaders(method, request);
-            setMethodContent(request, method);            
+            method.setRequestEntity(new ObjectRequestEntity(writer, object));
             client.executeMethod(method);
             return new HttpClientResponse(this, method);
         } catch (Exception e) {
@@ -148,12 +140,12 @@ public class HttpClientConnector implements Connector {
         }
     }
 
-    public Response put(Request request) throws ContentManagerException {
+    public <T> Response put(Request request, XmlObjectWriter<T> writer, T object) throws ContentManagerException {
         try {
             PutMethod method = new PutMethod(request.getUrl());
             setMethodParams(method, request);
             setMethodHeaders(method, request);
-            setMethodContent(request, method);
+            method.setRequestEntity(new ObjectRequestEntity(writer, object));
             client.executeMethod(method);
             return new HttpClientResponse(this, method);
         } catch (Exception e) {
@@ -161,7 +153,75 @@ public class HttpClientConnector implements Connector {
         }
     }
     
+
+    public Type getType(ReadContext ctx, String href) {
+        Request req = new Request(href);
+        Response resp = get(req);
+        if (!resp.isOk()) {
+            throw new ContentManagerException("Remote server returned error code: "+resp.getStatusCode()+"\n\n"+resp.getString());
+        }        
+        return resp.getType(ctx);
+    }
+
+    public ObjectEntry getObject(ReadContext ctx, String href) {
+        Request req = new Request(href);
+        Response resp = get(req);
+        if (!resp.isOk()) {
+            throw new ContentManagerException("Remote server returned error code: "+resp.getStatusCode()+"\n\n"+resp.getString());
+        }        
+        return resp.getObject(ctx);
+    }
+
+    public List<ObjectEntry> getObjectFeed(ReadContext ctx, String href)
+            throws ContentManagerException {
+        Request req = new Request(href);
+        Response resp = get(req);
+        if (!resp.isOk()) {
+            throw new ContentManagerException("Remote server returned error code: "+resp.getStatusCode()+"\n\n"+resp.getString());
+        }        
+        return resp.getObjectFeed(ctx);
+    }
+
+    public List<ObjectEntry> getTypeFeed(ReadContext ctx, String href)
+            throws ContentManagerException {
+        Request req = new Request(href);
+        Response resp = get(req);
+        if (!resp.isOk()) {
+            throw new ContentManagerException("Remote server returned error code: "+resp.getStatusCode()+"\n\n"+resp.getString());
+        }        
+        return resp.getObjectFeed(ctx);
+    }
     
+    public Repository[] getServiceDocument(ReadContext ctx, String href)
+            throws ContentManagerException {
+        Request req = new Request(href);
+        Response resp = get(req);
+        if (!resp.isOk()) {
+            throw new ContentManagerException("Remote server returned error code: "+resp.getStatusCode()+"\n\n"+resp.getString());
+        }        
+        return resp.getServiceDocument(ctx);
+    }
+
+    public Response putObject(Request req, ObjectEntry entry)
+            throws ContentManagerException {
+        return put(req, cm.getIO().getObjectEntryWriter(), entry);
+    }
+    
+    public Response putQuery(Request req, String query)
+            throws ContentManagerException {
+        return put(req, cm.getIO().getQueryWriter(), query);
+    }
+
+    public Response postObject(Request req, ObjectEntry entry)
+        throws ContentManagerException {
+        return post(req, cm.getIO().getObjectEntryWriter(), entry);
+    }
+
+    public Response postQuery(Request req, String query)
+        throws ContentManagerException {
+        return post(req, cm.getIO().getQueryWriter(), query);
+    }
+
     protected class MyCredentialsProvider implements CredentialsProvider {
         public Credentials getCredentials(AuthScheme scheme, String host,
                 int port, boolean proxy)

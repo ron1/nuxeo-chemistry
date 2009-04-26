@@ -29,9 +29,8 @@ import org.nuxeo.chemistry.client.Credentials;
 import org.nuxeo.chemistry.client.CredentialsProvider;
 import org.nuxeo.chemistry.client.NoSuchRepositoryException;
 import org.nuxeo.chemistry.client.app.httpclient.HttpClientConnector;
-import org.nuxeo.chemistry.client.common.AdapterFactory;
 import org.nuxeo.chemistry.client.common.AdapterManager;
-import org.nuxeo.chemistry.client.common.atom.BuildContext;
+import org.nuxeo.chemistry.client.common.atom.ReadContext;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
@@ -40,32 +39,25 @@ import org.nuxeo.chemistry.client.common.atom.BuildContext;
 public class APPContentManager implements ContentManager {
 
     protected String baseUrl;
-    protected AdapterManager adapterMgr;
     protected Connector connector;
 
-    protected SerializationManager serializationMgr;
-    
-    protected APPServiceDocument app;
+    protected Repository[] repos;
     
     protected CredentialsProvider login;
-
+    protected IOProvider ioProvider;
+    
     protected static ThreadLocal<List<CredentialsProvider>> loginStack = new ThreadLocal<List<CredentialsProvider>>();
     protected static Map<Class<?>, Class<?>> services = new Hashtable<Class<?>, Class<?>>();
     
 
     public APPContentManager(String url) {
-        this (url, null, null, null);
+        this (url, null);
     }
 
-    protected APPContentManager(String url, Connector connector) {
-        this (url, connector, null, null);
-    }
             
-    protected APPContentManager(String url, Connector connector, SerializationManager serializationMgr, AdapterManager adapterManager) {
+    protected APPContentManager(String url, Connector connector) {
         this.baseUrl = url;
         this.connector = connector;
-        this.serializationMgr = serializationMgr;
-        this.adapterMgr = adapterManager;
         initialize();
     }
 
@@ -74,47 +66,13 @@ public class APPContentManager implements ContentManager {
         if (connector == null) {
             connector = createConnector();
         }
-        if (serializationMgr == null) {
-            serializationMgr = createSerializationManager();
-        }
-        if (adapterMgr == null) {
-            adapterMgr = createAdapterManager();
-        }
-        initializeHandlers();
     }
     
-    protected void initializeHandlers() {
-        registerSerializationHandler(new APPServiceDocumentHandler());
-        registerSerializationHandler(new APPObjectEntryHandler());
-        //registerSerializationHandler(new APPDocumentHandler());
-        //registerSerializationHandler(new APPFolderHandler());
-        //registerSerializationHandler(new TypeHandler());
-    }
     
     protected AdapterManager createAdapterManager() {
         return new AdapterManager();
     }
 
-    public AdapterManager getAdapterManager() {
-        return adapterMgr;
-    }
-
-    public synchronized AdapterFactory getAdapterFactory(Class<?> adaptee, Class<?> adapter) {
-        return adapterMgr.getAdapterFactory(adaptee, adapter);
-    }
-
-    public <T> T getAdapter(Object adaptee, Class<T> adapter) {
-        return adapterMgr.getAdapter(adaptee, adapter);
-    }
-
-    public void registerAdapters(Class<?> clazz, AdapterFactory factory) {
-        adapterMgr.registerAdapters(clazz, factory);
-    }
-
-
-    protected SerializationManager createSerializationManager() {
-        return new DefaultSerializationManager();
-    }
 
     protected Connector createConnector() {
         return new HttpClientConnector(this);
@@ -128,31 +86,19 @@ public class APPContentManager implements ContentManager {
         return connector;
     }
 
-    public SerializationManager getSerializationManager() {
-        return serializationMgr;
-    }
-
-    public void registerSerializationHandler(SerializationHandler<?> handler) {
-        serializationMgr.registerHandler(handler);
-    }
-
-    public void unregisterSerializationHandler(Class<?> clazz) {
-        serializationMgr.unregisterHandler(clazz);
-    }
 
     public Repository[] getRepositories() throws ContentManagerException {
-        if (app == null) {
+        if (repos == null) {
             Request req = new Request(getBaseUrl());
             Response resp = connector.get(req);
             if (!resp.isOk()) {
                 throw new ContentManagerException("Remote server returned error code: "+resp.getStatusCode());
             }
-            BuildContext ctx = new BuildContext();
+            ReadContext ctx = new ReadContext();
             ctx.put(APPContentManager.class, this);
-            app = resp.getEntity(ctx,
-                    APPServiceDocument.class);
+            repos = resp.getServiceDocument(ctx);
         }
-        return app.getRepositories();
+        return repos;
     }
 
     public Repository getRepository(String id)
@@ -174,7 +120,7 @@ public class APPContentManager implements ContentManager {
     }
 
     public void refresh() {
-        app = null;
+        repos = null;
     }
     
     public void login(String username, String pass) {
@@ -215,13 +161,28 @@ public class APPContentManager implements ContentManager {
         login = provider;
     }
 
-     
+    public IOProvider getIO() {
+        if (ioProvider == null) {
+            ioProvider = new DefaultIOProvider();
+        }
+        return ioProvider;
+    }
+
+    public void setIO(IOProvider readers) {
+        this.ioProvider = readers;
+    }
+    
+    
     public static void registerService(Class<?> itf, Class<?> impl) {
         services.put(itf, impl);
+    }
+    
+    public static void unregisterService(Class<?> itf) {
+        services.remove(itf);
     }
     
     public static Class<?> getServiceClass(Class<?> itf) {
         return services.get(itf);
     }
-
+    
 }

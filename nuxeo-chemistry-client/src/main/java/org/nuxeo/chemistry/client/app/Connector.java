@@ -16,7 +16,14 @@
  */
 package org.nuxeo.chemistry.client.app;
 
+import java.util.List;
+
+import org.apache.chemistry.ObjectEntry;
+import org.apache.chemistry.repository.Repository;
+import org.apache.chemistry.type.Type;
 import org.nuxeo.chemistry.client.ContentManagerException;
+import org.nuxeo.chemistry.client.common.atom.ReadContext;
+import org.nuxeo.chemistry.client.common.atom.XmlObjectWriter;
 
 
 /**
@@ -30,16 +37,32 @@ public interface Connector {
 
     APPContentManager getAPPContentManager();
 
-    SerializationManager getSerializationManager();
+    <T> Response post(Request operation, XmlObjectWriter<T> writer, T object) throws ContentManagerException;
 
-    Response post(Request operation) throws ContentManagerException;
-
-    Response put(Request operation) throws ContentManagerException;
+    <T> Response put(Request operation, XmlObjectWriter<T> writer, T object) throws ContentManagerException;
 
     Response get(Request operation) throws ContentManagerException;
 
     Response head(Request operation) throws ContentManagerException;
 
     Response delete(Request operation) throws ContentManagerException;
+
+    Type getType(ReadContext ctx, String href) throws ContentManagerException;
+    
+    ObjectEntry getObject(ReadContext ctx, String href) throws ContentManagerException;
+    
+    List<ObjectEntry> getObjectFeed(ReadContext ctx, String href) throws ContentManagerException;
+    
+    List<ObjectEntry> getTypeFeed(ReadContext ctx, String href) throws ContentManagerException;
+    
+    Repository[] getServiceDocument(ReadContext ctx, String href) throws ContentManagerException;
+
+    Response putObject(Request req, ObjectEntry entry) throws ContentManagerException;
+    
+    Response putQuery(Request req, String query) throws ContentManagerException;
+
+    Response postObject(Request req, ObjectEntry entry) throws ContentManagerException;
+    
+    Response postQuery(Request req, String query) throws ContentManagerException;
 
 }

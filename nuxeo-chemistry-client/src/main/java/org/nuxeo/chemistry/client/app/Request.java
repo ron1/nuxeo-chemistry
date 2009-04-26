@@ -28,10 +28,9 @@ import java.util.List;
 public class Request {
 
     protected String url;
-    protected Object content;
     protected List<String> headers;
     protected List<String> params;
-
+    
     public Request(String url) {
         this.url = url;
     }
@@ -63,14 +62,6 @@ public class Request {
 
     public List<String> getParameters() {
         return params;
-    }
-
-    public void setContent(Object obj) {
-        this.content = obj;
-    }
-
-    public Object getContent() {
-        return content;
     }
 
 }

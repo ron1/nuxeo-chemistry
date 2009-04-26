@@ -16,42 +16,34 @@
  */
 package org.nuxeo.chemistry.client.app;
 
-import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.chemistry.ObjectEntry;
-import org.apache.chemistry.repository.Repository;
 import org.apache.chemistry.type.Type;
-import org.nuxeo.chemistry.client.ContentManagerException;
-import org.nuxeo.chemistry.client.common.atom.ReadContext;
+import org.nuxeo.chemistry.client.common.atom.EntryReader;
+import org.nuxeo.chemistry.client.common.atom.FeedReader;
+import org.nuxeo.chemistry.client.common.atom.ServiceDocumentReader;
+import org.nuxeo.chemistry.client.common.atom.XmlObjectWriter;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
-public interface Response {
+public interface IOProvider {
 
-    int getStatusCode();
-
-    String getHeader(String key);
-
-    InputStream getStream() throws ContentManagerException;
-
-    byte[] getBytes() throws ContentManagerException;
-
-    String getString() throws ContentManagerException;
-
-    List<ObjectEntry> getObjectFeed(ReadContext ctx) throws ContentManagerException;
-
-    Map<String, Type> getTypeFeed(ReadContext ctx) throws ContentManagerException;
-
-    ObjectEntry getObject(ReadContext ctx) throws ContentManagerException;
-
-    Type getType(ReadContext ctx) throws ContentManagerException;
+    EntryReader<? extends ObjectEntry> getObjectEntryReader();
     
-    Repository[] getServiceDocument(ReadContext ctx) throws ContentManagerException;
+    EntryReader<? extends Type> getTypeEntryReader();
     
-    boolean isOk();
+    ServiceDocumentReader<?> getServiceDocumentReader();
+    
+    FeedReader<List<ObjectEntry>> getObjectFeedReader();
+    
+    FeedReader<Map<String, Type>> getTypeFeedReader();
+
+    XmlObjectWriter<ObjectEntry> getObjectEntryWriter();
+    
+    XmlObjectWriter<String> getQueryWriter();
 
 }

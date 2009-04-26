@@ -14,42 +14,29 @@
  * Contributors:
  *     bstefanescu
  */
-package org.nuxeo.chemistry.client.app.httpclient;
+package org.nuxeo.chemistry.client.common.atom;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Writer;
 
-import org.apache.commons.httpclient.methods.RequestEntity;
-import org.nuxeo.chemistry.client.common.atom.XmlObjectWriter;
+import org.nuxeo.chemistry.client.common.xml.XMLWriter;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
  *
  */
-public class ObjectRequestEntity<T> implements RequestEntity {
+public interface XmlObjectWriter<T> {
 
-    protected XmlObjectWriter<T> writer;
-    protected T obj;
-
-    public ObjectRequestEntity(XmlObjectWriter<T> writer, T obj) {
-        this.writer =  writer;
-        this.obj = obj;
-    }
-
-    public long getContentLength() {
-        return -1;
-    }
-
-    public String getContentType() {
-        return writer.getContentType();
-    }
-
-    public boolean isRepeatable() {
-        return false;
-    }
-
-    public void writeRequest(OutputStream out) throws IOException {
-        writer.write(obj, out);
-    }
-
+    String getContentType();
+    
+    void write(T object, File file) throws IOException;
+    
+    void write(T object, OutputStream out) throws IOException;
+    
+    void write(T object, Writer writer) throws IOException;
+    
+    void write(T object, XMLWriter writer) throws IOException;
+    
 }

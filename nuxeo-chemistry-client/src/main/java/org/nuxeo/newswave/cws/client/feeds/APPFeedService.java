@@ -18,17 +18,14 @@ package org.nuxeo.newswave.cws.client.feeds;
 
 import java.util.List;
 
-import org.apache.chemistry.Connection;
 import org.nuxeo.chemistry.client.ContentManagerException;
-import org.nuxeo.chemistry.client.app.APPConnection;
-import org.nuxeo.chemistry.client.app.APPContentManager;
-import org.nuxeo.chemistry.client.app.APPRepository;
 import org.nuxeo.chemistry.client.app.Request;
 import org.nuxeo.chemistry.client.app.Response;
+import org.nuxeo.chemistry.client.app.model.APPConnection;
 import org.nuxeo.chemistry.client.app.service.ExtensionService;
 import org.nuxeo.chemistry.client.app.service.ServiceContext;
-import org.nuxeo.chemistry.client.common.AdapterFactory;
-import org.nuxeo.chemistry.client.common.atom.BuildContext;
+import org.nuxeo.chemistry.client.common.atom.ListFeedReader;
+import org.nuxeo.chemistry.client.common.atom.ReadContext;
 
 /**
  * @author <a href="mailto:bs@nuxeo.com">Bogdan Stefanescu</a>
@@ -37,21 +34,12 @@ import org.nuxeo.chemistry.client.common.atom.BuildContext;
 @ExtensionService
 public class APPFeedService implements FeedService {
 
+    protected String url;
     protected APPConnection connection;
+    protected ListFeedReader<FeedDescriptor> reader = new ListFeedReader<FeedDescriptor>(new FeedDescriptorEntryReader());
 
     public APPFeedService(ServiceContext ctx) {
-        String href = ctx.getInfo().getHref();
-        //TODO use href to configure the service 
-        APPContentManager cm = (APPContentManager)((APPRepository)ctx.getRepository()).getContentManager();
-        cm.registerSerializationHandler(new APPFeedsHandler());
-        cm.registerAdapters(Connection.class, new AdapterFactory() {
-            public Class<?>[] getAdapterTypes() {
-                return new Class<?>[] { FeedService.class };
-            }
-            public <T> T getAdapter(Object obj, Class<T> adapter) {
-                return (T)new APPFeedService((APPConnection)obj);
-            }
-        });        
+        url = ctx.getInfo().getHref();
     }
     
     public APPFeedService(APPConnection session) {
@@ -64,11 +52,15 @@ public class APPFeedService implements FeedService {
 
 
     public List<FeedDescriptor> getFeeds() throws ContentManagerException {
-        Request req = new Request(connection.getBaseUrl()+"/feeds"); // TODO use atom collections
+        Request req = new Request(url); 
         Response resp = connection.getConnector().get(req);
-        BuildContext ctx = new BuildContext();
+        ReadContext ctx = new ReadContext();
         ctx.put(APPFeedService.class, this);
-        return (List)resp.getFeed(ctx, FeedDescriptor.class);
+        try {
+            return reader.read(ctx, resp.getStream());
+        } catch (Exception e) {
+            throw new ContentManagerException(e);
+        }
     }
 
 }

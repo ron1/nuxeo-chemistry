@@ -17,4 +17,9 @@ public  class ContentManagerException extends RuntimeException {
     public ContentManagerException(String message, Exception e) {
         super(message,e);
     }
+    
+    public ContentManagerException(Exception e) {
+        super(e);
+    }
+
 }

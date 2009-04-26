@@ -25,8 +25,8 @@ import org.apache.chemistry.ObjectEntry;
 import org.apache.chemistry.repository.Repository;
 import org.apache.chemistry.type.Type;
 import org.nuxeo.chemistry.client.app.APPContentManager;
-import org.nuxeo.chemistry.client.app.APPRepository;
-import org.nuxeo.chemistry.client.app.APPType;
+import org.nuxeo.chemistry.client.app.model.APPRepository;
+import org.nuxeo.chemistry.client.app.model.APPType;
 import org.nuxeo.chemistry.client.common.Navigator;
 import org.nuxeo.newswave.cws.client.feeds.APPFeedService;
 import org.nuxeo.newswave.cws.client.feeds.FeedService;
@@ -97,14 +97,14 @@ public class Test {
         System.out.println(">>>>> "+repo.getType("Folder"));
         doc = entry.getDocument();
         System.out.println(doc.getId());
-        doc.setValue("dc:title", "My Modified Title 3");
+        doc.setValue("dc:title", "My Modified Title 4");
         doc.save();
         
         entry = nav.resolve("/default-domain/workspaces/some_folder");        
         System.out.println("entry modif title: "+entry.getString("dc:title"));
 
         APPContentManager.registerService(FeedService.class, APPFeedService.class);
-        FeedService fs = ((APPRepository)repo).getService(FeedService.class);
+        FeedService fs = ((APPRepository)repo).getExtension(FeedService.class);
         System.out.println(fs);
         
     }
