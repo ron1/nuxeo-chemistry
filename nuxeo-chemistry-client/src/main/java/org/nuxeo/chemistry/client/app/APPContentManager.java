@@ -29,7 +29,6 @@ import org.nuxeo.chemistry.client.Credentials;
 import org.nuxeo.chemistry.client.CredentialsProvider;
 import org.nuxeo.chemistry.client.NoSuchRepositoryException;
 import org.nuxeo.chemistry.client.app.httpclient.HttpClientConnector;
-import org.nuxeo.chemistry.client.common.AdapterManager;
 import org.nuxeo.chemistry.client.common.atom.ReadContext;
 
 /**
@@ -61,19 +60,26 @@ public class APPContentManager implements ContentManager {
         initialize();
     }
 
+    protected APPContentManager(String url, Connector connector, IOProvider ioProvider) {
+        this.baseUrl = url;
+        this.connector = connector;
+        this.ioProvider = ioProvider;
+        initialize();
+    }
 
     protected void initialize() {
         if (connector == null) {
             connector = createConnector();
         }
+        if (ioProvider == null) {
+            ioProvider = createIOProvider(); 
+        }
     }
     
-    
-    protected AdapterManager createAdapterManager() {
-        return new AdapterManager();
+    protected IOProvider createIOProvider() {
+        return new DefaultIOProvider();
     }
-
-
+    
     protected Connector createConnector() {
         return new HttpClientConnector(this);
     }
@@ -147,7 +153,7 @@ public class APPContentManager implements ContentManager {
     public void logout() {
         login = null;
     }
-    
+
     public Credentials getCurrentLogin() {
         List<CredentialsProvider> stack = loginStack.get();
         return stack == null || stack.isEmpty() ? login.getCredentials() : stack.get(stack.size()-1).getCredentials();
@@ -162,9 +168,6 @@ public class APPContentManager implements ContentManager {
     }
 
     public IOProvider getIO() {
-        if (ioProvider == null) {
-            ioProvider = new DefaultIOProvider();
-        }
         return ioProvider;
     }
 

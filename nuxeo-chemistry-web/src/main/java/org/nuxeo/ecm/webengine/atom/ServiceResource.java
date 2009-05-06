@@ -65,6 +65,7 @@ public abstract class ServiceResource extends ModuleRoot implements UrlResolver 
         }
         return ws.getResource(ctx);
     }
+    
         
     @GET
     public Response doGet() {
