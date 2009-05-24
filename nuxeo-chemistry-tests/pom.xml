@@ -10,7 +10,8 @@
   <parent>
     <groupId>org.nuxeo.ecm.core</groupId>
     <artifactId>nuxeo-chemistry</artifactId>
-    <version>1.5-SNAPSHOT</version>
+    <version>1.5.1-bs-SNAPSHOT</version>
+    <relativePath>../pom.xml</relativePath>
   </parent>
 
   <artifactId>nuxeo-chemistry-tests</artifactId>

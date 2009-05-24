@@ -469,5 +469,4 @@ public class NuxeoType implements Type {
     public PropertyDefinition getPropertyDefinition(String name) {
         return propertyDefinitions.get(name);
     }
-
 }

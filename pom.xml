@@ -8,13 +8,15 @@
   </prerequisites>
 
   <parent>
-    <groupId>org.nuxeo.ecm.core</groupId>
-    <artifactId>nuxeo-core-parent</artifactId>
-    <version>1.5-SNAPSHOT</version>
+    <groupId>org.nuxeo.ecm.distribution</groupId>
+    <artifactId>nuxeo-distribution</artifactId>
+    <version>5.2.1-SNAPSHOT</version>
   </parent>
 
+  <groupId>org.nuxeo.ecm.core</groupId>
   <artifactId>nuxeo-chemistry</artifactId>
   <name>Nuxeo Chemistry</name>
+  <version>1.5.1-bs-SNAPSHOT</version>
   <description>Nuxeo Core: Chemistry</description>
   <packaging>pom</packaging>
 
@@ -27,11 +29,31 @@
   </modules>
 
   <properties>
-    <chemistry.version>0.1-SNAPSHOT</chemistry.version>
+    <chemistry.version>0.1-bs-SNAPSHOT</chemistry.version>
   </properties>
 
   <dependencyManagement>
     <dependencies>
+      <dependency>
+	<groupId>org.nuxeo.runtime</groupId>
+	<artifactId>nuxeo-runtime-test</artifactId>
+        <version>${nuxeo.runtime.version}</version>
+      </dependency>
+      <dependency>
+	<groupId>org.nuxeo.ecm.core</groupId>
+	<artifactId>nuxeo-core-storage-sql-test</artifactId>
+        <version>${nuxeo.core.version}</version>
+      </dependency>
+      <dependency>
+	<groupId>org.nuxeo.ecm.webengine</groupId>
+	<artifactId>nuxeo-webengine-core</artifactId>
+        <version>${nuxeo.webengine.version}</version>
+      </dependency>
+      <dependency>
+	<groupId>org.nuxeo.ecm.webengine</groupId>
+	<artifactId>nuxeo-webengine-base</artifactId>
+        <version>${nuxeo.webengine.version}</version>
+      </dependency>
       <dependency>
 	<groupId>org.nuxeo.ecm.core</groupId>
 	<artifactId>nuxeo-chemistry-impl</artifactId>
