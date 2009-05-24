@@ -23,7 +23,6 @@
   <modules>
     <module>nuxeo-chemistry-impl</module>
     <module>nuxeo-chemistry-client</module>
-    <module>nuxeo-chemistry-shell</module>
     <module>nuxeo-chemistry-web</module>
     <module>nuxeo-chemistry-tests</module>
   </modules>
