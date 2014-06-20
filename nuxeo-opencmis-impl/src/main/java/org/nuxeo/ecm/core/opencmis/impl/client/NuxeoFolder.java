@@ -94,7 +94,7 @@ public class NuxeoFolder extends NuxeoFileableObject implements Folder {
         if (context == null) {
             context = session.getDefaultContext();
         }
-        NuxeoObjectData newData = service.copy(source.getId(), getId(),
+        NuxeoObjectData newData = nuxeoCmisService.copy(source.getId(), getId(),
                 properties, type, versioningState, policies, addACEs,
                 removeACEs, context);
         return (NuxeoDocument) session.getObjectFactory().convertObject(
@@ -184,7 +184,7 @@ public class NuxeoFolder extends NuxeoFileableObject implements Folder {
                 List<CmisObject> items = new ArrayList<CmisObject>();
                 DocumentModelList children;
                 try {
-                    children = service.getCoreSession().getChildren(
+                    children = nuxeoCmisService.getCoreSession().getChildren(
                             data.doc.getRef());
                 } catch (ClientException e) {
                     throw new CmisRuntimeException(e.toString(), e);
@@ -193,7 +193,7 @@ public class NuxeoFolder extends NuxeoFileableObject implements Folder {
                 long skip = skipCount;
                 // TODO orderBy
                 for (DocumentModel child : children) {
-                    if (service.isFilteredOut(child)) {
+                    if (nuxeoCmisService.isFilteredOut(child)) {
                         continue;
                     }
                     totalItems++;
@@ -248,7 +248,7 @@ public class NuxeoFolder extends NuxeoFileableObject implements Folder {
             CoreSession coreSession = data.doc.getCoreSession();
             DocumentModel parent = coreSession.getParentDocument(new IdRef(
                     getId()));
-            if (parent == null || service.isFilteredOut(parent)) {
+            if (parent == null || nuxeoCmisService.isFilteredOut(parent)) {
                 return null;
             }
             return parent.getId();

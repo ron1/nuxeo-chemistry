@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<component name="org.nuxeo.ecm.core.opencmis.bindings.NuxeoCmisServiceFactoryManager" version="1.0.0">
+
+  <implementation
+    class="org.nuxeo.ecm.core.opencmis.bindings.NuxeoCmisServiceFactoryManager" />
+
+  <service>
+    <provide interface="org.nuxeo.ecm.core.opencmis.bindings.NuxeoCmisServiceFactoryManager" />
+  </service>
+
+  <documentation>
+    The nuxeo cmis service factory manager the NuxeoCmisServiceFactory class and parameters
+    to be extended.
+    
+    <code>
+      <extension target="org.nuxeo.ecm.core.opencmis.bindings.NuxeoCmisServiceFactoryManager" 
+          point="factory">
+        <factory class="org.nuxeo.ecm.core.opencmis.bindings.NuxeoCmisServiceFactory">
+          <parameter name="servicewrapper.1">com.example.my.SimpleWrapper</parameter>
+          <parameter name="servicewrapper.2">com.example.my.AdvancedWrapper,1,cmis:documents</parameter>
+          <parameter name="servicewrapper.3">com.example.my.DebuggingWrapper,testRepositoryId</parameter>
+        </factory>
+      </extension>
+    </code>
+    
+  </documentation>
+  
+  <extension-point name="factory">
+    <documentation>
+      This service provides an extension point to override the NuxeoCmisServiceFactory 
+      class and parameters.
+    </documentation>
+
+    <object class="org.nuxeo.ecm.core.opencmis.bindings.NuxeoCmisServiceFactoryDescriptor" />
+  </extension-point>
+
+</component>

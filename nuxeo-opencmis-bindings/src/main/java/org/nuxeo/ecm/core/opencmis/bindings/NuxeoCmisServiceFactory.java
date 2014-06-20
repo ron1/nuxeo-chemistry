@@ -20,7 +20,9 @@ import org.apache.chemistry.opencmis.commons.exceptions.CmisInvalidArgumentExcep
 import org.apache.chemistry.opencmis.commons.impl.server.AbstractServiceFactory;
 import org.apache.chemistry.opencmis.commons.server.CallContext;
 import org.apache.chemistry.opencmis.commons.server.CmisService;
-import org.apache.chemistry.opencmis.server.support.CmisServiceWrapper;
+import org.apache.chemistry.opencmis.server.support.wrapper.CallContextAwareCmisService;
+import org.apache.chemistry.opencmis.server.support.wrapper.CmisServiceWrapperManager;
+import org.apache.chemistry.opencmis.server.support.wrapper.ConformanceCmisServiceWrapper;
 import org.apache.commons.lang.StringUtils;
 import org.nuxeo.ecm.core.opencmis.impl.server.NuxeoCmisService;
 import org.nuxeo.ecm.core.opencmis.impl.server.NuxeoRepositories;
@@ -31,6 +33,8 @@ import org.nuxeo.ecm.core.opencmis.impl.server.NuxeoRepository;
  * <p>
  * Called for each method dispatch by
  * {@link org.apache.chemistry.opencmis.server.impl.atompub.CmisAtomPubServlet}
+ * or
+ * {@link org.apache.chemistry.opencmis.server.impl.atompub.CmisBrowserBindingServlet}
  * or
  * {@link org.apache.chemistry.opencmis.server.impl.webservices.AbstractService}.
  */
@@ -43,9 +47,16 @@ public class NuxeoCmisServiceFactory extends AbstractServiceFactory {
 
     protected Map<String, NuxeoRepository> repositories;
 
+    private CmisServiceWrapperManager wrapperManager;
+    
     @Override
     public void init(Map<String, String> parameters) {
         repositories = Collections.synchronizedMap(new HashMap<String, NuxeoRepository>());
+
+        wrapperManager = new CmisServiceWrapperManager();
+        wrapperManager.addWrappersFromServiceFactoryParameters(parameters);
+        wrapperManager.addOuterWrapper(ConformanceCmisServiceWrapper.class,
+                DEFAULT_TYPES_MAX_ITEMS, DEFAULT_TYPES_DEPTH, DEFAULT_MAX_ITEMS, DEFAULT_DEPTH);
     }
 
     @Override
@@ -56,26 +67,26 @@ public class NuxeoCmisServiceFactory extends AbstractServiceFactory {
     @Override
     public CmisService getService(CallContext context) {
         String repositoryId = context.getRepositoryId();
-        NuxeoRepository repository;
-        if (StringUtils.isEmpty(repositoryId)) {
-            repository = null;
-        } else {
+        NuxeoRepository repository = null;
+        if (!StringUtils.isEmpty(repositoryId)) {
             repository = NuxeoRepositories.getRepository(repositoryId);
             if (repository == null) {
                 throw new CmisInvalidArgumentException("No such repository: "
                         + repositoryId);
             }
         }
-        NuxeoCmisService service = new NuxeoCmisService(repository, context);
-        if (repository != null && service.getCoreSession() == null) {
+        NuxeoCmisService nuxeoCmisService = new NuxeoCmisService(repository);
+        CallContextAwareCmisService service =
+                (CallContextAwareCmisService) wrapperManager.wrap(nuxeoCmisService);
+
+        // hand over the call context to the service object
+        service.setCallContext(context);
+        if (repository != null && nuxeoCmisService.getCoreSession() == null) {
             throw new CmisInvalidArgumentException("No such repository: "
                     + repositoryId);
         }
 
-        // wrap the service to provide default parameter checks
-        return new CmisServiceWrapper<NuxeoCmisService>(service,
-                DEFAULT_TYPES_MAX_ITEMS, DEFAULT_TYPES_DEPTH,
-                DEFAULT_MAX_ITEMS, DEFAULT_DEPTH);
+        return service;
     }
 
 }

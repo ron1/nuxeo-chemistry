@@ -16,11 +16,16 @@ import javax.servlet.ServletContextListener;
 
 import org.apache.chemistry.opencmis.commons.server.CmisServiceFactory;
 import org.apache.chemistry.opencmis.server.impl.CmisRepositoryContextListener;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.nuxeo.runtime.api.Framework;
 
 /**
  * Servlet context listener that sets up the CMIS service factory in the servlet
  * context as expected by
  * {@link org.apache.chemistry.opencmis.server.impl.atompub.CmisAtomPubServlet}
+ * or
+ * {@link org.apache.chemistry.opencmis.server.impl.browser.CmisBrowserBindingServlet}
  * or
  * {@link org.apache.chemistry.opencmis.server.impl.webservices.AbstractService}
  * .
@@ -29,12 +34,20 @@ import org.apache.chemistry.opencmis.server.impl.CmisRepositoryContextListener;
  */
 public class NuxeoCmisContextListener implements ServletContextListener {
 
+    private static final Log log = LogFactory.getLog(NuxeoCmisContextListener.class);
+    
     @Override
     public void contextInitialized(ServletContextEvent sce) {
-        CmisServiceFactory factory = new NuxeoCmisServiceFactory();
-        factory.init(null);
-        sce.getServletContext().setAttribute(
-                CmisRepositoryContextListener.SERVICES_FACTORY, factory);
+        try {
+            NuxeoCmisServiceFactoryManager manager = 
+                    Framework.getService(NuxeoCmisServiceFactoryManager.class);
+            CmisServiceFactory factory = manager.getNuxeoCmisServiceFactory();
+            sce.getServletContext().setAttribute(
+                    CmisRepositoryContextListener.SERVICES_FACTORY, factory);            
+        } catch (Exception e) {
+            log.error("NuxeoCmisContextListener caught exception during initialization", e);
+            throw new RuntimeException(e);
+        }        
     }
 
     @Override

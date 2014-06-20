@@ -45,14 +45,18 @@ public class NuxeoDocument extends NuxeoFileableObject implements Document {
 
     @Override
     public void cancelCheckOut() {
-        service.cancelCheckOut(getId());
+        service.cancelCheckOut(getRepositoryId(), getId(), null);
     }
 
     @Override
     public ObjectId checkIn(boolean major, Map<String, ?> properties,
             ContentStream contentStream, String checkinComment) {
-        String verId = service.checkIn(getId(), major, properties, type,
-                contentStream, checkinComment);
+        Holder<String> idHolder = new Holder<String>(getId());
+        service.checkIn(getRepositoryId(), idHolder, major, 
+                objectFactory.convertProperties(properties, type, null, UPDATABILITY_READWRITE),
+                objectFactory.convertContentStream(contentStream), checkinComment, 
+                null, null, null, null);
+        String verId = idHolder.getValue();
         return session.createObjectId(verId);
     }
 
@@ -66,7 +70,9 @@ public class NuxeoDocument extends NuxeoFileableObject implements Document {
 
     @Override
     public ObjectId checkOut() {
-        String pwcId = service.checkOut(getId());
+        Holder<String> idHolder = new Holder<String>(getId());
+        service.checkOut(getRepositoryId(), idHolder, null, null);
+        String pwcId = idHolder.getValue();
         return session.createObjectId(pwcId);
     }
 
@@ -86,7 +92,7 @@ public class NuxeoDocument extends NuxeoFileableObject implements Document {
         if (context == null) {
             context = session.getDefaultContext();
         }
-        NuxeoObjectData newData = service.copy(getId(), target.getId(),
+        NuxeoObjectData newData = nuxeoCmisService.copy(getId(), target.getId(),
                 properties, type, versioningState, policies, addACEs,
                 removeACEs, context);
         return (NuxeoDocument) session.getObjectFactory().convertObject(

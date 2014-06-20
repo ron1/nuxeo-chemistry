@@ -43,6 +43,7 @@ import org.apache.chemistry.opencmis.commons.enums.ExtensionLevel;
 import org.apache.chemistry.opencmis.commons.enums.Updatability;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisNotSupportedException;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisRuntimeException;
+import org.apache.chemistry.opencmis.commons.server.CmisService;
 import org.nuxeo.ecm.core.api.ClientException;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.opencmis.impl.server.NuxeoCmisService;
@@ -60,7 +61,11 @@ public abstract class NuxeoObject implements CmisObject {
 
     protected final NuxeoSession session;
 
-    protected final NuxeoCmisService service;
+    protected final CmisService service;
+    
+    protected final NuxeoCmisService nuxeoCmisService;
+    
+    protected final NuxeoObjectFactory objectFactory;
 
     public final NuxeoObjectData data;
 
@@ -87,6 +92,8 @@ public abstract class NuxeoObject implements CmisObject {
             ObjectType type) {
         this.session = session;
         service = session.getService();
+        nuxeoCmisService = NuxeoCmisService.extractFromCmisService(service);
+        objectFactory = session.getObjectFactory();
         this.data = data;
         this.type = type;
     }
