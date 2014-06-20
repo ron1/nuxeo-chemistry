@@ -134,8 +134,8 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
     }
 
     @Override
-    public void init() throws Exception {
-        super.init();
+    public void initBinding(String username) throws Exception {
+        super.initBinding(username);
         repoService = binding.getRepositoryService();
         objService = binding.getObjectService();
         navService = binding.getNavigationService();
@@ -1222,9 +1222,8 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
         res = query(statement);
         assertEquals(3, res.getNumItems().intValue());
 
-        nuxeotc.closeSession();
-        nuxeotc.session = nuxeotc.openSessionAs("bob");
-        init();
+        closeBinding();
+        initBinding("bob");
 
         statement = "SELECT cmis:objectId FROM File";
         res = query(statement);
@@ -2153,10 +2152,9 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
 
     @Test
     public void testQueryJoinWithSecurity() throws Exception {
-        nuxeotc.closeSession();
-        nuxeotc.session = nuxeotc.openSessionAs("bob");
+        closeBinding();
+        initBinding("bob");
         // only testfile1 and testfile2 are accessible by bob
-        init();
 
         String statement;
         ObjectList res;
@@ -2919,9 +2917,8 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
         assertEquals(id2, getValue(od, PropertyIds.TARGET_ID));
 
         // normal user has security applied to its queries
-        nuxeotc.closeSession();
-        nuxeotc.session = nuxeotc.openSessionAs("john");
-        init();
+        closeBinding();
+        initBinding("john");
 
         statement = "SELECT A.cmis:objectId, B.cmis:objectId"
                 + " FROM cmis:document A"
@@ -2932,9 +2929,8 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
         assertEquals(0, res.getNumItems().intValue());
 
         // bob has Browse on testfile1 and testfile2
-        nuxeotc.closeSession();
-        nuxeotc.session = nuxeotc.openSessionAs("bob");
-        init();
+        closeBinding();
+        initBinding("bob");
 
         // no security check on relationship itself
         statement = "SELECT A.cmis:objectId, B.cmis:objectId"
