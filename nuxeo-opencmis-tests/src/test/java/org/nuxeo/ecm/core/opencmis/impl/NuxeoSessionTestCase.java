@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -73,12 +74,10 @@ import org.nuxeo.ecm.core.api.ClientException;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.IdRef;
 import org.nuxeo.ecm.core.api.Lock;
-import org.nuxeo.ecm.core.api.NuxeoPrincipal;
 import org.nuxeo.ecm.core.opencmis.impl.client.NuxeoSession;
 import org.nuxeo.ecm.core.opencmis.impl.server.NuxeoRepositories;
 import org.nuxeo.ecm.core.opencmis.tests.Helper;
 import org.nuxeo.ecm.core.storage.sql.SQLRepositoryTestCase;
-import org.nuxeo.ecm.platform.usermanager.NuxeoPrincipalImpl;
 
 /**
  * Tests that hit the high-level Session abstraction.
@@ -137,6 +136,8 @@ public abstract class NuxeoSessionTestCase extends SQLRepositoryTestCase {
         deployBundle("org.nuxeo.ecm.platform.audit");
         deployContrib("org.nuxeo.ecm.core.opencmis.tests.tests",
                 "OSGI-INF/audit-persistence-config.xml");
+        // NuxeoCmisServiceFactoryManager registration
+        deployBundle("org.nuxeo.ecm.core.opencmis.bindings");
         // QueryMaker registration
         deployBundle("org.nuxeo.ecm.core.opencmis.impl");
         // these deployments needed for NuxeoAuthenticationFilter.loginAs
@@ -347,9 +348,14 @@ public abstract class NuxeoSessionTestCase extends SQLRepositoryTestCase {
 
     @Test
     public void testCreateRelationship() throws Exception {
+        if (!isAtomPub && !isBrowser) {
+            // createRelationship admin user only empowered for AtomPub & Browser tests
+            return;
+        }
+
         String id1 = session.getObjectByPath("/testfolder1/testfile1").getId();
         String id2 = session.getObjectByPath("/testfolder1/testfile2").getId();
-
+        
         Map<String, Serializable> properties = new HashMap<String, Serializable>();
         properties.put(PropertyIds.OBJECT_TYPE_ID, "Relation");
         properties.put(PropertyIds.NAME, "rel");
@@ -357,16 +363,6 @@ public abstract class NuxeoSessionTestCase extends SQLRepositoryTestCase {
         properties.put(PropertyIds.TARGET_ID, id2);
         ObjectId relid = session.createRelationship(properties);
 
-        // note: has to be an administrator to get relations
-        closeSession();
-        NuxeoPrincipal admin = new NuxeoPrincipalImpl("admin", false, true);
-        super.session = openSessionAs(admin);
-        tearDownCmisSession();
-        Thread.sleep(1000); // otherwise sometimes fails to set up again
-        // for tests, server-side TrustingLoginProvider makes "admin*" an admin
-        setUpCmisSession(admin.getName());
-
-        session.clear(); // clear cache
         ItemIterable<Relationship> rels = session.getRelationships(
                 session.createObjectId(id1), false,
                 RelationshipDirection.SOURCE, null,
@@ -912,6 +908,52 @@ public abstract class NuxeoSessionTestCase extends SQLRepositoryTestCase {
                 (isAtomPub || isBrowser) ? USERNAME : "Administrator");
         Folder ws = (Folder) session.getObjectByPath(wsPath);
         assertNotNull(ws);
+    }
+
+    @Test
+    public void testLastModifiedServiceWrapper() throws Exception {
+        tearDownData();
+        tearDownCmisSession();
+        Thread.sleep(1000); // otherwise sometimes fails to set up again
+        // deploy the LastModifiedServiceWrapper
+        deployContrib("org.nuxeo.ecm.core.opencmis.tests.tests",
+                "OSGI-INF/test-servicefactorymanager-contrib.xml");
+        setUpCmisSession();
+        setUpData();
+
+        GregorianCalendar lastModifiedCalendar = Helper.getCalendar(2007, 4, 1, 12, 0, 0, TimeZone.getDefault());
+        Folder folder = (Folder) session.getObjectByPath("/testfolder1");
+        Map<String, Serializable> properties = new HashMap<String, Serializable>();
+        properties.put("dc:description", "my description");
+        properties.put("dc:modified", lastModifiedCalendar);
+        folder.updateProperties(properties, true);
+
+        // check Last-Modified Cache Response Header
+        if (isAtomPub || isBrowser) {
+            RepositoryInfo ri = session.getRepositoryInfo();
+            String uri = ri.getThinClientUri() + ri.getId() + "/";
+            uri += isAtomPub ? "children?id=" : "root?objectId=";
+            uri += folder.getId();
+            String lastModified = DateUtil.formatDate(lastModifiedCalendar.getTime());
+            String encoding = Base64.encodeBytes(
+                    new String(USERNAME + ":" + PASSWORD).getBytes());
+            DefaultHttpClient client = new DefaultHttpClient();
+            HttpGet request = new HttpGet(uri);
+            HttpResponse response = null;
+            request.setHeader("Authorization", "Basic " + encoding);
+            try {
+                response = client.execute(request);
+                assertEquals(HttpServletResponse.SC_OK,
+                        response.getStatusLine().getStatusCode());
+                assertEquals(lastModified,
+                        response.getLastHeader("Last-Modified").getValue());
+            } finally {
+                client.getConnectionManager().shutdown();
+            }
+        }
+
+        assertEquals(lastModifiedCalendar.getTimeInMillis(),
+                ((GregorianCalendar) folder.getPropertyValue("dc:modified")).getTimeInMillis());
     }
 
     protected void checkValue(String prop, Object expected, CmisObject ob) {

@@ -77,6 +77,7 @@ import org.apache.chemistry.opencmis.commons.exceptions.CmisInvalidArgumentExcep
 import org.apache.chemistry.opencmis.commons.exceptions.CmisNotSupportedException;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisRuntimeException;
+import org.apache.chemistry.opencmis.commons.impl.Constants;
 import org.apache.chemistry.opencmis.commons.impl.WSConverter;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.AbstractPropertyData;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.BindingsObjectFactoryImpl;
@@ -95,9 +96,12 @@ import org.apache.chemistry.opencmis.commons.impl.dataobjects.PropertyIdImpl;
 import org.apache.chemistry.opencmis.commons.impl.jaxb.CmisTypeContainer;
 import org.apache.chemistry.opencmis.commons.impl.server.AbstractCmisService;
 import org.apache.chemistry.opencmis.commons.server.CallContext;
+import org.apache.chemistry.opencmis.commons.server.CmisService;
 import org.apache.chemistry.opencmis.commons.server.ObjectInfo;
 import org.apache.chemistry.opencmis.commons.spi.BindingsObjectFactory;
 import org.apache.chemistry.opencmis.commons.spi.Holder;
+import org.apache.chemistry.opencmis.server.support.wrapper.AbstractCmisServiceWrapper;
+import org.apache.chemistry.opencmis.server.support.wrapper.CallContextAwareCmisService;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -141,7 +145,7 @@ import org.nuxeo.runtime.api.Framework;
 /**
  * Nuxeo implementation of the CMIS Services, on top of a {@link CoreSession}.
  */
-public class NuxeoCmisService extends AbstractCmisService {
+public class NuxeoCmisService extends AbstractCmisService implements CallContextAwareCmisService {
 
     public static final int DEFAULT_TYPE_LEVELS = 2;
 
@@ -163,51 +167,50 @@ public class NuxeoCmisService extends AbstractCmisService {
 
     protected final NuxeoRepository repository;
 
-    protected final CoreSession coreSession;
+    protected CoreSession coreSession;
 
     /* To avoid refetching it several times per session. */
     protected String cachedChangeLogToken;
 
-    /** When false, we don't own the core session and shouldn't close it. */
-    protected final boolean coreSessionOwned;
-
     /** Filter that hides HiddenInNavigation and deleted objects. */
     protected final Filter documentFilter;
 
-    protected final CallContext callContext;
+    protected CallContext callContext;
 
+    public static NuxeoCmisService extractFromCmisService(CmisService service) {
+        if (service == null) {
+            throw new IllegalArgumentException("CmisService must not be null");
+        }
+        CmisService currentService = service;
+        for(;;) {
+            if (currentService instanceof NuxeoCmisService) {
+                return (NuxeoCmisService) currentService;
+            }
+            if (!(currentService instanceof AbstractCmisServiceWrapper)) {
+                return null;
+            }
+            currentService = ((AbstractCmisServiceWrapper) currentService).getWrappedService();
+        }
+    }
+    
     /** Constructor called by binding. */
-    public NuxeoCmisService(NuxeoRepository repository, CallContext callContext) {
+    public NuxeoCmisService(NuxeoRepository repository) {
         this.repository = repository;
-        this.callContext = callContext;
-        this.coreSession = repository == null ? null
-                : openCoreSession(repository.getId());
-        coreSessionOwned = true;
         documentFilter = getDocumentFilter();
     }
-
-    /** Constructor called by high-level session from existing core session. */
-    public NuxeoCmisService(NuxeoRepository repository,
-            CallContext callContext, CoreSession coreSession) {
-        this.repository = repository;
-        this.callContext = callContext;
-        this.coreSession = coreSession;
-        coreSessionOwned = false;
-        documentFilter = getDocumentFilter();
-    }
-
+    
     // called in a finally block from dispatcher
     @Override
     public void close() {
-        if (coreSession != null && coreSessionOwned) {
+        if (coreSession != null) {
             closeCoreSession();
         }
         clearObjectInfos();
     }
 
-    protected CoreSession openCoreSession(String repositoryName) {
+    protected CoreSession openCoreSession(String repositoryName, String username) {
         try {
-            return CoreInstance.openCoreSession(repositoryName);
+            return CoreInstance.openCoreSession(repositoryName, username);
         } catch (ClientException e) {
             throw new CmisRuntimeException(e.toString(), e);
         }
@@ -229,8 +232,29 @@ public class NuxeoCmisService extends AbstractCmisService {
         return objectFactory;
     }
 
+    @Override
     public CallContext getCallContext() {
         return callContext;
+    }
+
+    /**
+     * Sets a new call context.
+     *
+     * This method should only be called by the service factory.
+     *
+     * @param callContext
+     *            the new call context
+     */
+    @Override
+    public void setCallContext(CallContext callContext) {
+        this.callContext = callContext;
+        if (coreSession != null) {
+            closeCoreSession();
+        }
+        String username = callContext.getBinding().equals(CallContext.BINDING_LOCAL)
+                ? callContext.getUsername() : null;
+        coreSession = repository == null ? null
+                : openCoreSession(repository.getId(), username);
     }
 
     /** Gets the filter that hides HiddenInNavigation and deleted objects. */
@@ -1431,7 +1455,8 @@ public class NuxeoCmisService extends AbstractCmisService {
                                 id, includeRelationships, coreSession, this);
                         od.setRelationships(relationships);
                     }
-                    if (renditionFilter != null && renditionFilter.length() > 0) {
+                    if (renditionFilter != null && renditionFilter.length() > 0
+                            && !renditionFilter.equals(Constants.RENDITION_NONE)) {
                         if (doc == null) {
                             doc = getDocumentModel(id);
                         }
