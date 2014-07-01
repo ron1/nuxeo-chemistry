@@ -12,6 +12,7 @@
 package org.nuxeo.ecm.core.opencmis.impl;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,9 +20,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.chemistry.opencmis.commons.SessionParameter;
+import org.apache.chemistry.opencmis.commons.data.Properties;
+import org.apache.chemistry.opencmis.commons.data.PropertyData;
+import org.apache.chemistry.opencmis.commons.data.PropertyString;
 import org.apache.chemistry.opencmis.commons.enums.CmisVersion;
 import org.apache.chemistry.opencmis.commons.server.CallContext;
 import org.apache.chemistry.opencmis.commons.server.CmisService;
+import org.apache.chemistry.opencmis.commons.spi.BindingsObjectFactory;
 import org.apache.chemistry.opencmis.commons.spi.CmisBinding;
 import org.apache.chemistry.opencmis.server.impl.CallContextImpl;
 import org.apache.chemistry.opencmis.server.shared.ThresholdOutputStreamFactory;
@@ -162,4 +167,10 @@ public class NuxeoBindingTestCase {
         }
     }
 
+    protected Properties createProperties(String key, String value) {
+        BindingsObjectFactory factory = binding.getObjectFactory();
+        PropertyString prop = factory.createPropertyStringData(key, value);
+        return factory.createPropertiesData(Collections.<PropertyData<?>> singletonList(prop));
+    }
+    
 }

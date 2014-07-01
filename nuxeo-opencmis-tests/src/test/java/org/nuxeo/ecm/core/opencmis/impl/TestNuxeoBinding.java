@@ -171,12 +171,6 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
         return factory.createPropertiesData(props);
     }
 
-    protected Properties createProperties(String key, String value) {
-        BindingsObjectFactory factory = binding.getObjectFactory();
-        PropertyString prop = factory.createPropertyStringData(key, value);
-        return factory.createPropertiesData(Collections.<PropertyData<?>> singletonList(prop));
-    }
-
     protected ObjectData getObject(String id) {
         return objService.getObject(repositoryId, id, null, Boolean.FALSE,
                 IncludeRelationships.BOTH, null, Boolean.FALSE, Boolean.FALSE,
