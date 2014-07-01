@@ -14,6 +14,10 @@
 
   <version>5.9.4-CKS2-SNAPSHOT</version>
 
+  <properties>
+    <nuxeo.opencmis.version>5.9.4-CKS2-SNAPSHOT</nuxeo.opencmis.version>
+  </properties>
+
   <modules>
     <module>nuxeo-opencmis-impl</module>
     <module>nuxeo-opencmis-bindings</module>

@@ -50,6 +50,7 @@ import org.apache.chemistry.opencmis.commons.server.CallContext;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.json.JSONException;
 import org.nuxeo.common.utils.FileUtils;
 import org.nuxeo.ecm.core.api.Blob;
 import org.nuxeo.ecm.core.api.ClientException;
@@ -61,7 +62,10 @@ import org.nuxeo.ecm.core.api.blobholder.BlobHolder;
 import org.nuxeo.ecm.core.api.impl.blob.FileBlob;
 import org.nuxeo.ecm.core.api.model.Property;
 import org.nuxeo.ecm.core.api.model.PropertyNotFoundException;
+import org.nuxeo.ecm.core.opencmis.impl.util.ComplexTypeJSONHandler;
 import org.nuxeo.ecm.core.query.sql.NXQL;
+import org.nuxeo.ecm.core.schema.types.ComplexType;
+import org.nuxeo.ecm.core.schema.types.ListType;
 import org.nuxeo.ecm.core.schema.types.Type;
 import org.nuxeo.ecm.core.storage.sql.coremodel.SQLBlob;
 import org.nuxeo.runtime.api.Framework;
@@ -72,10 +76,12 @@ import org.nuxeo.runtime.api.Framework;
  */
 public abstract class NuxeoPropertyData<T> extends NuxeoPropertyDataBase<T> {
 
+    private static final Log log = LogFactory.getLog(NuxeoPropertyData.class);
+
     protected final String name;
 
     protected final boolean readOnly;
-
+        
     // TODO unused
     public static final Map<String, String> propertyNameToNXQL;
     static {
@@ -408,12 +414,12 @@ public abstract class NuxeoPropertyData<T> extends NuxeoPropertyDataBase<T> {
                 }
                 List<Object> list = new ArrayList<Object>(values);
                 for (int i = 0; i < list.size(); i++) {
-                    list.set(i, convertToCMIS(list.get(i)));
+                    list.set(i, convertToCMIS(list.get(i), type));
                 }
                 return (U) list;
             } else {
-                // primitive type
-                return (U) convertToCMIS(value);
+                // primitive type or complex type
+                return (U) convertToCMIS(value, type);
             }
         } catch (ClientException e) {
             throw new CmisRuntimeException(e.toString(), e);
@@ -421,24 +427,59 @@ public abstract class NuxeoPropertyData<T> extends NuxeoPropertyDataBase<T> {
     }
 
     // conversion from Nuxeo value types to CMIS ones
-    protected static Object convertToCMIS(Object value) {
+    @SuppressWarnings("unchecked")
+    protected static Object convertToCMIS(Object value, Type type) {
         if (value instanceof Double) {
             return BigDecimal.valueOf(((Double) value).doubleValue());
         } else if (value instanceof Integer) {
             return BigInteger.valueOf(((Integer) value).intValue());
         } else if (value instanceof Long) {
             return BigInteger.valueOf(((Long) value).longValue());
+        } else if ((value instanceof Map) && type.isComplexType()) {
+            try {
+                return ComplexTypeJSONHandler.encodeComplex(
+                        (ComplexType) type, (Map<String, Object>) value);
+            } catch (JSONException je) {
+                log.warn(je);
+                return null;
+            }
+        } else if ((value instanceof Map) && type.isListType() 
+                && ((ListType) type).getFieldType().isComplexType()) {
+            try {
+                ComplexType complexType = (ComplexType) ((ListType) type).getFieldType();
+                return ComplexTypeJSONHandler.encodeComplex(
+                        complexType, (Map<String, Object>) value);
+            } catch (JSONException je) {
+                log.warn(je);
+                return null;
+            }
         } else {
             return value;
         }
     }
 
     // conversion from CMIS value types to Nuxeo ones
-    protected static Object convertToNuxeo(Object value) {
+    protected static Object convertToNuxeo(Object value, Type type) {
         if (value instanceof BigDecimal) {
             return Double.valueOf(((BigDecimal) value).doubleValue());
         } else if (value instanceof BigInteger) {
             return Long.valueOf(((BigInteger) value).longValue());
+        } else if (type.isComplexType()) {
+            try {
+                return ComplexTypeJSONHandler.decodeComplex(
+                        (ComplexType) type, value.toString());
+            } catch (JSONException je) {
+                log.warn(je);
+                return null;
+            }
+        } else if (type.isListType() && ((ListType) type).getFieldType().isComplexType()) {
+            try {
+                ComplexType complexType = (ComplexType) ((ListType) type).getFieldType();
+                return ComplexTypeJSONHandler.decodeComplex(complexType, value.toString());
+            } catch (JSONException je) {
+                log.warn(je);
+                return null;
+            }
         } else {
             return value;
         }
@@ -547,20 +588,21 @@ public abstract class NuxeoPropertyData<T> extends NuxeoPropertyDataBase<T> {
             if (readOnly) {
                 super.setValue(value);
             } else {
+                Type type = doc.getProperty(name).getType();
                 Object propValue;
                 if (value instanceof List<?>) {
                     @SuppressWarnings("unchecked")
                     List<Object> list = new ArrayList<Object>(
                             (List<Object>) value);
                     for (int i = 0; i < list.size(); i++) {
-                        list.set(i, convertToNuxeo(list.get(i)));
+                        list.set(i, convertToNuxeo(list.get(i), type));
                     }
                     if (list.isEmpty()) {
                         list = null;
                     }
                     propValue = list;
                 } else {
-                    propValue = convertToNuxeo(value);
+                    propValue = convertToNuxeo(value, type);
                 }
                 doc.setPropertyValue(name, (Serializable) propValue);
             }
