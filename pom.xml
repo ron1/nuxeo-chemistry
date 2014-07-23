@@ -12,7 +12,7 @@
   <description>Nuxeo Core: Chemistry</description>
   <packaging>pom</packaging>
 
-  <version>5.9.4-CKS1</version>
+  <version>5.9.4-CKS2-SNAPSHOT</version>
 
   <modules>
     <module>nuxeo-opencmis-impl</module>
