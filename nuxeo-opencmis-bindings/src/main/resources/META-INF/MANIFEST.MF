@@ -28,3 +28,4 @@ Import-Package: com.sun.xml.ws.api.handler;resolution:=optional,
  org.nuxeo.runtime.api,
  org.nuxeo.runtime.api.login
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-Activator: org.nuxeo.ecm.core.opencmis.bindings.Activator
