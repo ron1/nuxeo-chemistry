@@ -8,7 +8,7 @@
   <parent>
     <groupId>org.nuxeo.ecm.core</groupId>
     <artifactId>nuxeo-chemistry</artifactId>
-    <version>5.9.4-CKS2</version>
+    <version>5.9.4-CKS3-SNAPSHOT</version>
   </parent>
 
   <artifactId>nuxeo-opencmis-bindings</artifactId>
