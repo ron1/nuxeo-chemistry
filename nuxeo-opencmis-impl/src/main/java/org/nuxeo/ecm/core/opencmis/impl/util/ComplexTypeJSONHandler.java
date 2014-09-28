@@ -149,6 +149,9 @@ public class ComplexTypeJSONHandler {
             String name = field.getName().getPrefixedName();
             if (value.containsKey(name)) {
                 if (field.getType().isComplexType()) {
+                    if ("content".equals(field.getType().getName())) {
+                        continue;
+                    }
                     obj.put(name, encodeToJSON((ComplexType) field.getType(),
                             (Map<String, Object>) value.get(name)));
                 } else if (field.getType().isListType()) {
