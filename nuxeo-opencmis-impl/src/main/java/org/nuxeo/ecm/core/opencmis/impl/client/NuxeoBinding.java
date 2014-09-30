@@ -25,11 +25,11 @@ import org.nuxeo.ecm.core.opencmis.impl.server.NuxeoCmisService;
  */
 public class NuxeoBinding implements CmisBinding {
 
+    private static final BindingsObjectFactory OBJECT_FACTORY = new BindingsObjectFactoryImpl();
+
     public final CmisService service;
 
-    private NuxeoCmisService nuxeoCmisService = null;
-    
-    private static final BindingsObjectFactory objectFactory = new BindingsObjectFactoryImpl();
+    private NuxeoCmisService nuxeoCmisService;
 
     public NuxeoBinding(CmisService service) {
         this.service = service;
@@ -87,7 +87,7 @@ public class NuxeoBinding implements CmisBinding {
 
     @Override
     public BindingsObjectFactory getObjectFactory() {
-        return objectFactory;
+        return OBJECT_FACTORY;
     }
 
     @Override
@@ -118,13 +118,13 @@ public class NuxeoBinding implements CmisBinding {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException();
     }
-    
+
     public CoreSession getCoreSession() {
         return getNuxeoCmisService() == null ? null : nuxeoCmisService.getCoreSession();
     }
 
-    /*
-     * Get potentially wrapped NuxeoCmisService
+    /**
+     * Gets the potentially wrapped NuxeoCmisService.
      */
     public NuxeoCmisService getNuxeoCmisService() {
         if (nuxeoCmisService == null) {
@@ -132,5 +132,5 @@ public class NuxeoBinding implements CmisBinding {
         }
         return nuxeoCmisService;
     }
-    
+
 }

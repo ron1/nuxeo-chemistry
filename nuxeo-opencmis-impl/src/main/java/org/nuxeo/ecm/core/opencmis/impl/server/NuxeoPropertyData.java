@@ -67,7 +67,7 @@ import org.nuxeo.ecm.core.query.sql.NXQL;
 import org.nuxeo.ecm.core.schema.types.ComplexType;
 import org.nuxeo.ecm.core.schema.types.ListType;
 import org.nuxeo.ecm.core.schema.types.Type;
-import org.nuxeo.ecm.core.storage.sql.coremodel.SQLBlob;
+import org.nuxeo.ecm.core.storage.StorageBlob;
 import org.nuxeo.runtime.api.Framework;
 
 /**
@@ -81,7 +81,7 @@ public abstract class NuxeoPropertyData<T> extends NuxeoPropertyDataBase<T> {
     protected final String name;
 
     protected final boolean readOnly;
-        
+
     // TODO unused
     public static final Map<String, String> propertyNameToNXQL;
     static {
@@ -765,8 +765,8 @@ public abstract class NuxeoPropertyData<T> extends NuxeoPropertyDataBase<T> {
         @Override
         public String getFirstValue() {
             Blob blob = getBlob(doc);
-            if (blob instanceof SQLBlob) {
-                SQLBlob sqlBlob = ((SQLBlob) blob);
+            if (blob instanceof StorageBlob) {
+                StorageBlob sqlBlob = ((StorageBlob) blob);
                 return sqlBlob.getBinary().getDigest();
             }
             return null;

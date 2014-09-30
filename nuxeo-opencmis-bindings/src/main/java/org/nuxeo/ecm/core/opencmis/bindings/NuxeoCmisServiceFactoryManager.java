@@ -12,7 +12,7 @@
  * Lesser General Public License for more details.
  *
  * Contributors:
- * 
+ *
  */
 package org.nuxeo.ecm.core.opencmis.bindings;
 
@@ -24,29 +24,32 @@ import org.nuxeo.runtime.model.DefaultComponent;
 import org.nuxeo.runtime.model.SimpleContributionRegistry;
 
 /**
- *
+ * Service holding the definition
  */
 public class NuxeoCmisServiceFactoryManager extends DefaultComponent {
+
     private static final String XP_FACTORY = "factory";
 
-    protected NuxeoCmisServiceFactoryDescriptorRegistry registry = 
-            new NuxeoCmisServiceFactoryDescriptorRegistry();
+    protected NuxeoCmisServiceFactoryDescriptorRegistry registry = new NuxeoCmisServiceFactoryDescriptorRegistry();
 
     protected static class NuxeoCmisServiceFactoryDescriptorRegistry extends
             SimpleContributionRegistry<NuxeoCmisServiceFactoryDescriptor> {
 
         @Override
-        public String getContributionId(NuxeoCmisServiceFactoryDescriptor contrib) {
+        public String getContributionId(
+                NuxeoCmisServiceFactoryDescriptor contrib) {
             return XP_FACTORY;
         }
 
         @Override
-        public NuxeoCmisServiceFactoryDescriptor clone(NuxeoCmisServiceFactoryDescriptor orig) {
+        public NuxeoCmisServiceFactoryDescriptor clone(
+                NuxeoCmisServiceFactoryDescriptor orig) {
             return new NuxeoCmisServiceFactoryDescriptor(orig);
         }
 
         @Override
-        public void merge(NuxeoCmisServiceFactoryDescriptor src, NuxeoCmisServiceFactoryDescriptor dst) {
+        public void merge(NuxeoCmisServiceFactoryDescriptor src,
+                NuxeoCmisServiceFactoryDescriptor dst) {
             dst.merge(src);
         }
 
@@ -98,18 +101,19 @@ public class NuxeoCmisServiceFactoryManager extends DefaultComponent {
         registry.addContribution(descriptor);
     }
 
-    protected void removeContribution(NuxeoCmisServiceFactoryDescriptor descriptor) {
+    protected void removeContribution(
+            NuxeoCmisServiceFactoryDescriptor descriptor) {
         registry.removeContribution(descriptor);
     }
 
     /**
-     * Get NuxeoCmisServiceFactory based on contributed NuxeoCmisServiceFactoryDescriptors
+     * Gets the {@link NuxeoCmisServiceFactory} based on contributed
+     * {@link NuxeoCmisServiceFactoryDescriptor}s.
      */
     public NuxeoCmisServiceFactory getNuxeoCmisServiceFactory() {
-        NuxeoCmisServiceFactoryDescriptor descriptor = 
-                registry.getNuxeoCmisServiceFactoryDescriptor();
+        NuxeoCmisServiceFactoryDescriptor descriptor = registry.getNuxeoCmisServiceFactoryDescriptor();
 
-        Class<? extends NuxeoCmisServiceFactory> factoryClass = null; 
+        Class<? extends NuxeoCmisServiceFactory> factoryClass = null;
         Map<String, String> factoryParameters = null;
         if (descriptor != null) {
             factoryClass = descriptor.getFactoryClass();
@@ -119,10 +123,11 @@ public class NuxeoCmisServiceFactoryManager extends DefaultComponent {
         try {
             nuxeoCmisServiceFactory = factoryClass.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
-            throw new RuntimeException("Cannot instantiate nuxeoCmisServiceFactory: "
-                    + factoryClass.getName(), e);
+            throw new RuntimeException(
+                    "Cannot instantiate nuxeoCmisServiceFactory: "
+                            + factoryClass.getName(), e);
         }
-        
+
         nuxeoCmisServiceFactory.init(factoryParameters);
         return nuxeoCmisServiceFactory;
     }

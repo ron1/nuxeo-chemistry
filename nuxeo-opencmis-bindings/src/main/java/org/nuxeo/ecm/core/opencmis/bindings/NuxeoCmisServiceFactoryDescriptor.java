@@ -13,8 +13,6 @@ package org.nuxeo.ecm.core.opencmis.bindings;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.nuxeo.common.xmap.annotation.XNode;
 import org.nuxeo.common.xmap.annotation.XNodeMap;
 import org.nuxeo.common.xmap.annotation.XObject;
@@ -25,31 +23,25 @@ import org.nuxeo.common.xmap.annotation.XObject;
 @XObject(value = "factory")
 public class NuxeoCmisServiceFactoryDescriptor {
 
-    @XNode("@name")
-    protected String name;
-
     @XNode("@class")
-    private Class<? extends NuxeoCmisServiceFactory> factoryClass;
+    public Class<? extends NuxeoCmisServiceFactory> factoryClass;
 
     public Class<? extends NuxeoCmisServiceFactory> getFactoryClass() {
-        return factoryClass == null 
-                ? NuxeoCmisServiceFactory.class : factoryClass;
+        return factoryClass == null ? NuxeoCmisServiceFactory.class
+                : factoryClass;
     }
 
-    public void setNuxeoCmisServiceFactoryClass(Class<? extends NuxeoCmisServiceFactory> klass) {
-        factoryClass = klass;
-    }
-    
     @XNodeMap(value = "parameter", key = "@name", type = HashMap.class, componentType = String.class)
-    public Map<String, String> factoryParameters = new HashMap<String, String>();
+    public Map<String, String> factoryParameters = new HashMap<>();
 
     public NuxeoCmisServiceFactoryDescriptor() {
     }
 
     /** Copy constructor. */
-    public NuxeoCmisServiceFactoryDescriptor(NuxeoCmisServiceFactoryDescriptor other) {
+    public NuxeoCmisServiceFactoryDescriptor(
+            NuxeoCmisServiceFactoryDescriptor other) {
         factoryClass = other.factoryClass;
-        factoryParameters = new HashMap<String, String>(other.factoryParameters);
+        factoryParameters = new HashMap<>(other.factoryParameters);
     }
 
     public void merge(NuxeoCmisServiceFactoryDescriptor other) {

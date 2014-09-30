@@ -50,7 +50,7 @@ public class TestNuxeoBindingComplexProperties extends NuxeoBindingTestCase {
     @Before
     public void setUp() throws Exception {
         super.setUp();
-        Helper.makeNuxeoRepository(nuxeotc.getSession());
+        Helper.makeNuxeoRepository(nuxeotc.session);
     }
 
     @Override
@@ -68,6 +68,12 @@ public class TestNuxeoBindingComplexProperties extends NuxeoBindingTestCase {
     protected ObjectData getObjectByPath(String path) {
         return objService.getObjectByPath(repositoryId, path, null, null, null,
                 null, null, null, null);
+    }
+
+    protected Properties createProperties(String key, String value) {
+        BindingsObjectFactory factory = binding.getObjectFactory();
+        PropertyString prop = factory.createPropertyStringData(key, value);
+        return factory.createPropertiesData(Collections.<PropertyData<?>> singletonList(prop));
     }
 
     /**

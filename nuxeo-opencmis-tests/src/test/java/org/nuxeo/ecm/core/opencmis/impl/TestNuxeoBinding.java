@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2011 Nuxeo SA (http://nuxeo.com/) and others.
+ * Copyright (c) 2006-2014 Nuxeo SA (http://nuxeo.com/) and others.
  *
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
@@ -11,6 +11,44 @@
  */
 package org.nuxeo.ecm.core.opencmis.impl;
 
+import static org.apache.chemistry.opencmis.commons.BasicPermissions.ALL;
+import static org.apache.chemistry.opencmis.commons.BasicPermissions.READ;
+import static org.apache.chemistry.opencmis.commons.BasicPermissions.WRITE;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_ADD_POLICY_OBJECT;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_ADD_POLICY_POLICY;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_ADD_TO_FOLDER_FOLDER;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_ADD_TO_FOLDER_OBJECT;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_APPLY_ACL_OBJECT;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_CANCEL_CHECKOUT_DOCUMENT;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_CHECKIN_DOCUMENT;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_CHECKOUT_DOCUMENT;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_CREATE_DOCUMENT_FOLDER;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_CREATE_FOLDER_FOLDER;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_CREATE_POLICY_FOLDER;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_CREATE_RELATIONSHIP_SOURCE;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_CREATE_RELATIONSHIP_TARGET;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_DELETE_CONTENT_DOCUMENT;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_DELETE_OBJECT;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_DELETE_TREE_FOLDER;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_GET_ACL_OBJECT;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_GET_ALL_VERSIONS_VERSION_SERIES;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_GET_APPLIED_POLICIES_OBJECT;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_GET_CHILDREN_FOLDER;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_GET_DESCENDENTS_FOLDER;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_GET_FOLDER_PARENT_OBJECT;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_GET_OBJECT_RELATIONSHIPS_OBJECT;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_GET_PARENTS_FOLDER;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_GET_PROPERTIES_OBJECT;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_MOVE_OBJECT;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_MOVE_SOURCE;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_MOVE_TARGET;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_REMOVE_FROM_FOLDER_FOLDER;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_REMOVE_FROM_FOLDER_OBJECT;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_REMOVE_POLICY_OBJECT;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_REMOVE_POLICY_POLICY;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_SET_CONTENT_DOCUMENT;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_UPDATE_PROPERTIES_OBJECT;
+import static org.apache.chemistry.opencmis.commons.data.PermissionMapping.CAN_VIEW_CONTENT_OBJECT;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -18,6 +56,7 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -28,6 +67,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -37,6 +77,8 @@ import java.util.Set;
 import java.util.TimeZone;
 
 import org.apache.chemistry.opencmis.commons.PropertyIds;
+import org.apache.chemistry.opencmis.commons.data.Ace;
+import org.apache.chemistry.opencmis.commons.data.Acl;
 import org.apache.chemistry.opencmis.commons.data.AclCapabilities;
 import org.apache.chemistry.opencmis.commons.data.AllowableActions;
 import org.apache.chemistry.opencmis.commons.data.ChangeEventInfo;
@@ -46,11 +88,14 @@ import org.apache.chemistry.opencmis.commons.data.ObjectInFolderContainer;
 import org.apache.chemistry.opencmis.commons.data.ObjectInFolderList;
 import org.apache.chemistry.opencmis.commons.data.ObjectList;
 import org.apache.chemistry.opencmis.commons.data.ObjectParentData;
+import org.apache.chemistry.opencmis.commons.data.PermissionMapping;
+import org.apache.chemistry.opencmis.commons.data.Principal;
 import org.apache.chemistry.opencmis.commons.data.Properties;
 import org.apache.chemistry.opencmis.commons.data.PropertyData;
 import org.apache.chemistry.opencmis.commons.data.PropertyString;
 import org.apache.chemistry.opencmis.commons.data.RepositoryCapabilities;
 import org.apache.chemistry.opencmis.commons.data.RepositoryInfo;
+import org.apache.chemistry.opencmis.commons.definitions.PermissionDefinition;
 import org.apache.chemistry.opencmis.commons.definitions.PropertyDefinition;
 import org.apache.chemistry.opencmis.commons.definitions.TypeDefinition;
 import org.apache.chemistry.opencmis.commons.definitions.TypeDefinitionContainer;
@@ -72,7 +117,11 @@ import org.apache.chemistry.opencmis.commons.exceptions.CmisConstraintException;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisInvalidArgumentException;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisRuntimeException;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.AccessControlEntryImpl;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.AccessControlListImpl;
+import org.apache.chemistry.opencmis.commons.impl.dataobjects.AccessControlPrincipalDataImpl;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.ContentStreamImpl;
+import org.apache.chemistry.opencmis.commons.spi.AclService;
 import org.apache.chemistry.opencmis.commons.spi.BindingsObjectFactory;
 import org.apache.chemistry.opencmis.commons.spi.DiscoveryService;
 import org.apache.chemistry.opencmis.commons.spi.Holder;
@@ -90,8 +139,15 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.api.DocumentModel;
+import org.nuxeo.ecm.core.api.IdRef;
 import org.nuxeo.ecm.core.api.PathRef;
+import org.nuxeo.ecm.core.api.security.ACE;
+import org.nuxeo.ecm.core.api.security.ACL;
+import org.nuxeo.ecm.core.api.security.ACP;
 import org.nuxeo.ecm.core.api.security.SecurityConstants;
+import org.nuxeo.ecm.core.api.security.impl.ACLImpl;
+import org.nuxeo.ecm.core.api.security.impl.ACPImpl;
+import org.nuxeo.ecm.core.opencmis.impl.client.NuxeoBinding;
 import org.nuxeo.ecm.core.opencmis.impl.server.NuxeoRepository;
 import org.nuxeo.ecm.core.opencmis.impl.server.NuxeoTypeHelper;
 import org.nuxeo.ecm.core.opencmis.tests.Helper;
@@ -123,13 +179,16 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
 
     protected VersioningService verService;
 
+    protected AclService aclService;
+
     protected String file5id;
 
     @Override
     @Before
     public void setUp() throws Exception {
         super.setUp();
-        Map<String, String> info = Helper.makeNuxeoRepository(nuxeotc.getSession());
+        Map<String, String> info = Helper.makeNuxeoRepository(nuxeotc.session);
+        sleepForFulltext();
         file5id = info.get("file5id");
     }
 
@@ -142,6 +201,7 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
         filingService = binding.getMultiFilingService();
         discService = binding.getDiscoveryService();
         verService = binding.getVersioningService();
+        aclService = binding.getAclService();
     }
 
     @Override
@@ -169,6 +229,12 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
         props.add(factory.createPropertyIdData(PropertyIds.OBJECT_TYPE_ID,
                 typeId));
         return factory.createPropertiesData(props);
+    }
+
+    protected Properties createProperties(String key, String value) {
+        BindingsObjectFactory factory = binding.getObjectFactory();
+        PropertyString prop = factory.createPropertyStringData(key, value);
+        return factory.createPropertiesData(Collections.<PropertyData<?>> singletonList(prop));
     }
 
     protected ObjectData getObject(String id) {
@@ -224,6 +290,10 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
         checkInfo(info);
     }
 
+    protected static Set<String> set(String... strings) {
+        return new HashSet<String>(Arrays.asList(strings));
+    }
+
     protected void checkInfo(RepositoryInfo info) {
         assertEquals(repositoryId, info.getId());
         assertEquals("Nuxeo Repository " + repositoryId, info.getName());
@@ -243,22 +313,82 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
                 Arrays.asList(BaseTypeId.CMIS_DOCUMENT, BaseTypeId.CMIS_FOLDER),
                 info.getChangesOnType());
         assertEquals(SecurityConstants.EVERYONE, info.getPrincipalIdAnyone());
+
+        // capabilities
+
         RepositoryCapabilities caps = info.getCapabilities();
-        assertEquals(CapabilityAcl.NONE, caps.getAclCapability());
+        assertEquals(CapabilityAcl.MANAGE, caps.getAclCapability());
         assertEquals(CapabilityChanges.OBJECTIDSONLY,
                 caps.getChangesCapability());
         assertEquals(CapabilityContentStreamUpdates.PWCONLY,
                 caps.getContentStreamUpdatesCapability());
-        assertEquals(CapabilityJoin.INNERANDOUTER, caps.getJoinCapability());
+        assertEquals(supportsJoins() ? CapabilityJoin.INNERANDOUTER
+                : CapabilityJoin.NONE, caps.getJoinCapability());
         assertEquals(CapabilityQuery.BOTHCOMBINED, caps.getQueryCapability());
         assertEquals(CapabilityRenditions.READ, caps.getRenditionsCapability());
+
+        // ACL capabilities
+
         AclCapabilities aclCaps = info.getAclCapabilities();
-        assertEquals(AclPropagation.REPOSITORYDETERMINED,
-                aclCaps.getAclPropagation());
-        assertEquals(Collections.emptyMap(), aclCaps.getPermissionMapping());
-        assertEquals(Collections.emptyList(), aclCaps.getPermissions());
-        assertEquals(SupportedPermissions.BASIC,
+        assertEquals(AclPropagation.PROPAGATE, aclCaps.getAclPropagation());
+        assertEquals(SupportedPermissions.REPOSITORY,
                 aclCaps.getSupportedPermissions());
+
+        Map<String, String> permDefs = new HashMap<>();
+        for (PermissionDefinition pd : aclCaps.getPermissions()) {
+            permDefs.put(pd.getId(), pd.getDescription());
+        }
+        Map<String, String> expectedPermDefs = new HashMap<>();
+        expectedPermDefs.put(READ, "Read");
+        expectedPermDefs.put(WRITE, "Write");
+        expectedPermDefs.put(ALL, "All");
+        expectedPermDefs.put(NuxeoRepository.NUXEO_READ_REMOVE, "Remove");
+        assertEquals(expectedPermDefs, permDefs);
+
+        Map<String, Set<String>> permMap = new HashMap<>();
+        for (PermissionMapping permissonMapping : aclCaps.getPermissionMapping().values()) {
+            String key = permissonMapping.getKey();
+            List<String> perms = permissonMapping.getPermissions();
+            permMap.put(key, new HashSet<String>(perms));
+        }
+        Map<String, Set<String>> expectedPermMap = new HashMap<>();
+        expectedPermMap.put(CAN_GET_DESCENDENTS_FOLDER, set(READ));
+        expectedPermMap.put(CAN_GET_CHILDREN_FOLDER, set(READ));
+        expectedPermMap.put(CAN_GET_PARENTS_FOLDER, set(READ));
+        expectedPermMap.put(CAN_GET_FOLDER_PARENT_OBJECT, set(READ));
+        expectedPermMap.put(CAN_CREATE_DOCUMENT_FOLDER, set(WRITE));
+        expectedPermMap.put(CAN_CREATE_FOLDER_FOLDER, set(WRITE));
+        expectedPermMap.put(CAN_CREATE_POLICY_FOLDER, set(WRITE));
+        expectedPermMap.put(CAN_CREATE_RELATIONSHIP_SOURCE, set(READ));
+        expectedPermMap.put(CAN_CREATE_RELATIONSHIP_TARGET, set(READ));
+        expectedPermMap.put(CAN_GET_PROPERTIES_OBJECT, set(READ));
+        expectedPermMap.put(CAN_VIEW_CONTENT_OBJECT, set(READ));
+        expectedPermMap.put(CAN_UPDATE_PROPERTIES_OBJECT, set(WRITE));
+        expectedPermMap.put(CAN_MOVE_OBJECT, set(WRITE));
+        expectedPermMap.put(CAN_MOVE_TARGET, set(WRITE));
+        expectedPermMap.put(CAN_MOVE_SOURCE, set(WRITE));
+        expectedPermMap.put(CAN_DELETE_OBJECT, set(WRITE));
+        expectedPermMap.put(CAN_DELETE_TREE_FOLDER, set(WRITE));
+        expectedPermMap.put(CAN_SET_CONTENT_DOCUMENT, set(WRITE));
+        expectedPermMap.put(CAN_DELETE_CONTENT_DOCUMENT, set(WRITE));
+        expectedPermMap.put(CAN_ADD_TO_FOLDER_OBJECT, set(WRITE));
+        expectedPermMap.put(CAN_ADD_TO_FOLDER_FOLDER, set(WRITE));
+        expectedPermMap.put(CAN_REMOVE_FROM_FOLDER_OBJECT, set(WRITE));
+        expectedPermMap.put(CAN_REMOVE_FROM_FOLDER_FOLDER, set(WRITE));
+        expectedPermMap.put(CAN_CHECKOUT_DOCUMENT, set(WRITE));
+        expectedPermMap.put(CAN_CANCEL_CHECKOUT_DOCUMENT, set(WRITE));
+        expectedPermMap.put(CAN_CHECKIN_DOCUMENT, set(WRITE));
+        expectedPermMap.put(CAN_GET_ALL_VERSIONS_VERSION_SERIES, set(READ));
+        expectedPermMap.put(CAN_GET_OBJECT_RELATIONSHIPS_OBJECT, set(READ));
+        expectedPermMap.put(CAN_ADD_POLICY_OBJECT, set(WRITE));
+        expectedPermMap.put(CAN_ADD_POLICY_POLICY, set(WRITE));
+        expectedPermMap.put(CAN_REMOVE_POLICY_OBJECT, set(WRITE));
+        expectedPermMap.put(CAN_REMOVE_POLICY_POLICY, set(WRITE));
+        expectedPermMap.put(CAN_GET_APPLIED_POLICIES_OBJECT, set(READ));
+        expectedPermMap.put(CAN_GET_ACL_OBJECT, set(READ));
+        expectedPermMap.put(CAN_APPLY_ACL_OBJECT, set(ALL));
+
+        assertEquals(expectedPermMap, permMap);
     }
 
     @Test
@@ -503,10 +633,13 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
         @SuppressWarnings("unchecked")
         List<String> facets = (List<String>) getValues(data,
                 NuxeoTypeHelper.NX_FACETS);
-        assertEquals(
-                new HashSet<String>(Arrays.asList("Commentable",
-                        "Downloadable", "HasRelatedText", "Publishable",
-                        "Versionable")), new HashSet<String>(facets));
+        assertEquals(set( //
+                "Commentable", //
+                "Downloadable", //
+                "HasRelatedText", //
+                "Publishable", //
+                "Versionable" //
+        ), new HashSet<String>(facets));
         assertEquals(null, getString(data, NuxeoTypeHelper.NX_DIGEST));
         @SuppressWarnings("unchecked")
         List<String> hashes = (List<String>) getValues(data,
@@ -1165,7 +1298,8 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
         assertEquals(4, res.getNumItems().intValue());
         statement = "SELECT * FROM cmis:folder";
         res = query(statement);
-        assertEquals(5, res.getNumItems().intValue()); // root too
+        assertEquals(returnsRootInFolderQueries() ? 5 : 4,
+                res.getNumItems().intValue());
 
         statement = "SELECT cmis:objectId, dc:description" //
                 + " FROM File" //
@@ -1199,12 +1333,14 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
         }
     }
 
-    @SuppressWarnings("boxing")
     protected void checkQueriedValue(String type, String term) {
         String statement = String.format(
                 "SELECT cmis:objectId FROM %s WHERE %s", type, term);
         ObjectList res = query(statement);
-        assertNotSame(0, res.getNumItems().intValue());
+        int num = res.getNumItems().intValue();
+        if (num == 0) {
+            fail("no result for: " + statement);
+        }
     }
 
     @Test
@@ -1702,6 +1838,7 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
         assertEquals(1, res.getNumItems().intValue());
     }
 
+    @SuppressWarnings("boxing")
     @Test
     public void testQueryMixinTypes() throws Exception {
         String statement;
@@ -1735,12 +1872,7 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
         statement = "SELECT * FROM File WHERE 'CustomFacetWithMySchema2' = ANY nuxeo:secondaryObjectTypeIds";
         res = query(statement);
         assertEquals(1, res.getNumItems().intValue());
-        // with several qualifiers (therefore a JOIN)
-        statement = "SELECT A.cmis:objectId FROM cmis:document A"
-                + " JOIN cmis:folder B ON A.nuxeo:parentId = B.cmis:objectId"
-                + " WHERE 'Versionable' = ANY A.nuxeo:secondaryObjectTypeIds";
-        res = query(statement);
-        assertEquals(4, res.getNumItems().intValue());
+        // additional test with JOIN in next method
 
         // ANY ... IN ...
         statement = "SELECT nuxeo:secondaryObjectTypeIds FROM File WHERE ANY nuxeo:secondaryObjectTypeIds IN ('Versionable')";
@@ -1775,6 +1907,35 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
         statement = "SELECT nuxeo:secondaryObjectTypeIds FROM File WHERE ANY nuxeo:secondaryObjectTypeIds NOT IN ('Versionable', 'CustomFacetWithoutSchema')";
         res = query(statement);
         assertEquals(0, res.getNumItems().intValue());
+    }
+
+    @SuppressWarnings("boxing")
+    @Test
+    public void testQueryMixinTypesJoin() throws Exception {
+        assumeTrue(supportsJoins());
+
+        String statement;
+        ObjectList res;
+
+        // add some instance facets on 2 documents
+        DocumentModel doc1 = nuxeotc.session.getDocument(new PathRef(
+                "/testfolder1/testfile1"));
+        assertTrue(doc1.addFacet("CustomFacetWithoutSchema"));
+        nuxeotc.session.saveDocument(doc1);
+        DocumentModel doc2 = nuxeotc.session.getDocument(new PathRef(
+                "/testfolder1/testfile2"));
+        assertTrue(doc2.addFacet("CustomFacetWithMySchema2"));
+        doc2.setPropertyValue("my2:long", 12);
+        nuxeotc.session.saveDocument(doc2);
+        nuxeotc.session.save();
+
+        // ... = ANY ...
+        // with several qualifiers (therefore a JOIN)
+        statement = "SELECT A.cmis:objectId FROM cmis:document A"
+                + " JOIN cmis:folder B ON A.nuxeo:parentId = B.cmis:objectId"
+                + " WHERE 'Versionable' = ANY A.nuxeo:secondaryObjectTypeIds";
+        res = query(statement);
+        assertEquals(4, res.getNumItems().intValue());
     }
 
     @Test
@@ -1960,7 +2121,6 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
                 "dc:title", "new title1");
         PropertyData<?> propDescription = factory.createPropertyStringData(
                 "dc:description", "new description1");
-        @SuppressWarnings("unchecked")
         Properties properties = factory.createPropertiesData(Arrays.asList(
                 propTitle, propDescription));
 
@@ -2022,7 +2182,6 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
                 "dc:title", "new title1");
         PropertyData<?> propDescription = factory.createPropertyStringData(
                 "dc:description", "new description1");
-        @SuppressWarnings("unchecked")
         Properties properties = factory.createPropertiesData(Arrays.asList(
                 propTitle, propDescription));
 
@@ -2095,6 +2254,8 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
 
     @Test
     public void testQueryJoin() throws Exception {
+        assumeTrue(supportsJoins());
+
         String statement;
         ObjectList res;
         ObjectData data;
@@ -2126,6 +2287,8 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
 
     @Test
     public void testQueryJoinWithSubQueryMulti() throws Exception {
+        assumeTrue(supportsJoins());
+
         String statement = "SELECT A.cmis:objectId, B.cmis:objectId" //
                 + " FROM cmis:document A" //
                 + " LEFT JOIN File B ON A.cmis:objectId = B.cmis:objectId" //
@@ -2136,6 +2299,8 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
 
     @Test
     public void testQueryJoinWithSubQueryMultiIsNull() throws Exception {
+        assumeTrue(supportsJoins());
+
         String statement = "SELECT A.cmis:objectId, B.cmis:objectId" //
                 + " FROM cmis:document A" //
                 + " LEFT JOIN File B ON A.cmis:objectId = B.cmis:objectId" //
@@ -2146,6 +2311,8 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
 
     @Test
     public void testQueryJoinWithSecurity() throws Exception {
+        assumeTrue(supportsJoins());
+
         closeBinding();
         initBinding("bob");
         // only testfile1 and testfile2 are accessible by bob
@@ -2190,6 +2357,8 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
 
     @Test
     public void testQueryJoinWithFacets() throws Exception {
+        assumeTrue(supportsJoins());
+
         String statement = "SELECT A.cmis:objectId" //
                 + " FROM cmis:folder A" //
                 + " JOIN cmis:folder B ON A.cmis:objectId = B.cmis:parentId" //
@@ -2200,6 +2369,8 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
 
     @Test
     public void testQueryJoinReturnVirtualColumns() throws Exception {
+        assumeTrue(supportsJoins());
+
         String statement = "SELECT A.cmis:objectId, A.nuxeo:contentStreamDigest, B.cmis:path" //
                 + " FROM cmis:document A" //
                 + " JOIN cmis:folder B ON A.nuxeo:parentId = B.cmis:objectId" //
@@ -2214,6 +2385,8 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
 
     @Test
     public void testQueryJoinWithMultipleTypes() throws Exception {
+        assumeTrue(supportsJoins());
+
         String statement = "SELECT A.cmis:objectId, A.cmis:name, B.filename, C.note" //
                 + " FROM cmis:document A" //
                 + " LEFT JOIN File B ON A.cmis:objectId = B.cmis:objectId" //
@@ -2227,6 +2400,8 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
 
     @Test
     public void testQueryJoinWithMultipleTypes2() throws Exception {
+        assumeTrue(supportsJoins());
+
         String statement = "SELECT A.cmis:objectId, B.cmis:objectId, C.cmis:objectId" //
                 + " FROM cmis:document A" //
                 + " LEFT JOIN File B ON A.cmis:objectId = B.cmis:objectId" //
@@ -2854,6 +3029,8 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
 
     @Test
     public void testRelationship() throws Exception {
+        assumeTrue(supportsJoins());
+
         String id1 = getObjectByPath("/testfolder1/testfile1").getId();
         String id2 = getObjectByPath("/testfolder1/testfile2").getId();
 
@@ -2959,32 +3136,195 @@ public class TestNuxeoBinding extends NuxeoBindingTestCase {
         res = query("SELECT cmis:objectId FROM File WHERE dc:title NOT LIKE 'SECRET%'");
         assertEquals(2, res.getNumItems().intValue());
 
-        // deploy a security policy with a non-trivial query transformer
-        // that has no CMISQL equivalent
-        nuxeotc.deployContrib("org.nuxeo.ecm.core.opencmis.tests.tests",
-                "OSGI-INF/security-policy-contrib.xml");
-        // check that queries now fail
-        try {
-            query("SELECT cmis:objectId FROM File");
-            fail("Should be denied due to security policy");
-        } catch (CmisRuntimeException e) {
-            String msg = e.getMessage();
-            assertTrue(msg, msg.contains("Security policy"));
+        if (!supportsNXQLQueryTransformers()) {
+            // deploy a security policy with a non-trivial query transformer
+            // that has no CMISQL equivalent
+            nuxeotc.deployContrib("org.nuxeo.ecm.core.opencmis.tests.tests",
+                    "OSGI-INF/security-policy-contrib.xml");
+            // check that queries now fail
+            try {
+                query("SELECT cmis:objectId FROM File");
+                fail("Should be denied due to security policy");
+            } catch (CmisRuntimeException e) {
+                String msg = e.getMessage();
+                assertTrue(msg, msg.contains("Security policy"));
+            }
+
+            // without it it works again
+            nuxeotc.undeployContrib("org.nuxeo.ecm.core.opencmis.tests.tests",
+                    "OSGI-INF/security-policy-contrib.xml");
+            res = query("SELECT cmis:objectId FROM File");
+            assertEquals(3, res.getNumItems().intValue());
         }
 
-        // without it it works again
-        nuxeotc.undeployContrib("org.nuxeo.ecm.core.opencmis.tests.tests",
-                "OSGI-INF/security-policy-contrib.xml");
-        res = query("SELECT cmis:objectId FROM File");
-        assertEquals(3, res.getNumItems().intValue());
-
-        // deploy a security policy with a CMISQL transformer
-        nuxeotc.deployContrib("org.nuxeo.ecm.core.opencmis.tests.tests",
-                "OSGI-INF/security-policy-contrib2.xml");
+        // deploy a security policy with a transformer
+        nuxeotc.deployContrib(
+                "org.nuxeo.ecm.core.opencmis.tests.tests",
+                supportsNXQLQueryTransformers() ? "OSGI-INF/security-policy-contrib3.xml"
+                        : "OSGI-INF/security-policy-contrib2.xml");
         res = query("SELECT cmis:objectId FROM File");
         assertEquals(2, res.getNumItems().intValue());
         res = query("SELECT cmis:objectId FROM File WHERE dc:title <> 'something'");
         assertEquals(2, res.getNumItems().intValue());
+    }
+
+    /** Get ACL, using * suffix on username to denote non-direct. */
+    protected static Map<String, Set<String>> getActualAcl(Acl acl) {
+        Map<String, Set<String>> actual = new HashMap<>();
+        for (Ace ace : acl.getAces()) {
+            actual.put(ace.getPrincipalId() + (ace.isDirect() ? "" : "*"),
+                    new HashSet<String>(ace.getPermissions()));
+        }
+        return actual;
+    }
+
+    @Test
+    public void testGetACLBase() throws Exception {
+        String file1Id = getObjectByPath("/testfolder1/testfile1").getId();
+
+        Acl acl = aclService.getAcl(repositoryId, file1Id, Boolean.FALSE, null);
+        assertEquals(Boolean.TRUE, acl.isExact());
+        Map<String, Set<String>> actual = getActualAcl(acl);
+        Map<String, Set<String>> expected = new HashMap<>();
+        expected.put("bob", set("Browse"));
+        expected.put("members*", set(READ, "Read"));
+        expected.put("administrators*", set(READ, WRITE, ALL, "Everything"));
+        expected.put("Administrator*", set(READ, WRITE, ALL, "Everything"));
+        assertEquals(expected, actual);
+
+        // with only basic permissions
+
+        acl = aclService.getAcl(repositoryId, file1Id, Boolean.TRUE, null);
+        assertEquals(Boolean.FALSE, acl.isExact());
+        actual = getActualAcl(acl);
+        expected = new HashMap<>();
+        expected.put("members*", set(READ));
+        expected.put("administrators*", set(READ, WRITE, ALL));
+        expected.put("Administrator*", set(READ, WRITE, ALL));
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testGetACL() throws Exception {
+        CoreSession coreSession = nuxeotc.session;
+
+        String folder1Id = getObjectByPath("/testfolder1").getId();
+        String file1Id = getObjectByPath("/testfolder1/testfile1").getId();
+        String file4Id = getObjectByPath("/testfolder2/testfolder3/testfile4").getId();
+
+        // set more complex ACLs
+
+        {
+            // file1
+            ACP acp = new ACPImpl();
+            ACL acl = new ACLImpl();
+            acl.add(new ACE("pete", SecurityConstants.READ_WRITE, true));
+            acl.add(new ACE("john", SecurityConstants.WRITE, true));
+            acp.addACL(acl);
+            // other ACL
+            acl = new ACLImpl("workflow");
+            acl.add(new ACE("steve", SecurityConstants.READ, true));
+            acp.addACL(acl);
+            coreSession.setACP(new IdRef(file1Id), acp, true);
+
+            // folder1
+            acp = new ACPImpl();
+            acl = new ACLImpl();
+            acl.add(new ACE("mary", SecurityConstants.READ, true));
+            acp.addACL(acl);
+            coreSession.setACP(new IdRef(folder1Id), acp, true);
+
+            // block on testfile4
+            acp = new ACPImpl();
+            acl = new ACLImpl();
+            acl.add(new ACE(SecurityConstants.ADMINISTRATOR,
+                    SecurityConstants.READ, true));
+            acl.add(new ACE(SecurityConstants.EVERYONE,
+                    SecurityConstants.EVERYTHING, false));
+            acp.addACL(acl);
+            coreSession.setACP(new IdRef(file4Id), acp, true);
+
+            coreSession.save();
+            // process invalidations
+            ((NuxeoBinding) binding).getCoreSession().save();
+        }
+
+        Acl acl = aclService.getAcl(repositoryId, file1Id, Boolean.FALSE, null);
+        assertEquals(Boolean.TRUE, acl.isExact());
+        Map<String, Set<String>> actual = getActualAcl(acl);
+        Map<String, Set<String>> expected = new HashMap<>();
+        expected.put("pete", set(READ, WRITE, "ReadWrite"));
+        expected.put("john", set("Write"));
+        // * for inherited or not local acl
+        expected.put("steve*", set(READ, "Read"));
+        expected.put("mary*", set(READ, "Read"));
+        expected.put("members*", set(READ, "Read"));
+        expected.put("administrators*", set(READ, WRITE, ALL, "Everything"));
+        expected.put("Administrator*", set(READ, WRITE, ALL, "Everything"));
+        assertEquals(expected, actual);
+
+        // direct Object API
+
+        ObjectData ob = objService.getObjectByPath(repositoryId,
+                "/testfolder1/testfile1", null, null, null, null, null,
+                Boolean.TRUE, null); // includeAcl
+        acl = ob.getAcl();
+        assertEquals(Boolean.TRUE, acl.isExact());
+        actual = getActualAcl(acl);
+        assertEquals(expected, actual);
+
+        // check blocking
+
+        acl = aclService.getAcl(repositoryId, file4Id, Boolean.FALSE, null);
+        assertEquals(Boolean.TRUE, acl.isExact());
+        actual = getActualAcl(acl);
+        expected = new HashMap<>();
+        expected.put("Administrator", set(READ, "Read"));
+        expected.put("Everyone", set("Nothing"));
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testApplyACL() throws Exception {
+        String file1Id = getObjectByPath("/testfolder1/testfile1").getId();
+
+        // file1 already has a bob -> Browse permission from setUp
+
+        // add
+
+        Principal p = new AccessControlPrincipalDataImpl("mary");
+        Ace ace = new AccessControlEntryImpl(p, Arrays.asList(READ));
+        Acl addAces = new AccessControlListImpl(Arrays.asList(ace));
+        Acl removeAces = null;
+        Acl acl = aclService.applyAcl(repositoryId, file1Id, addAces,
+                removeAces, AclPropagation.REPOSITORYDETERMINED, null);
+
+        assertEquals(Boolean.TRUE, acl.isExact());
+        Map<String, Set<String>> actual = getActualAcl(acl);
+        Map<String, Set<String>> expected = new HashMap<>();
+        expected.put("bob", set("Browse"));
+        expected.put("mary", set(READ, "Read"));
+        expected.put("members*", set(READ, "Read"));
+        expected.put("administrators*", set(READ, WRITE, ALL, "Everything"));
+        expected.put("Administrator*", set(READ, WRITE, ALL, "Everything"));
+        assertEquals(expected, actual);
+
+        // remove
+
+        ace = new AccessControlEntryImpl(p, Arrays.asList(READ));
+        addAces = null;
+        removeAces = new AccessControlListImpl(Arrays.asList(ace));
+        acl = aclService.applyAcl(repositoryId, file1Id, addAces, removeAces,
+                AclPropagation.REPOSITORYDETERMINED, null);
+
+        assertEquals(Boolean.TRUE, acl.isExact());
+        actual = getActualAcl(acl);
+        expected = new HashMap<>();
+        expected.put("bob", set("Browse"));
+        expected.put("members*", set(READ, "Read"));
+        expected.put("administrators*", set(READ, WRITE, ALL, "Everything"));
+        expected.put("Administrator*", set(READ, WRITE, ALL, "Everything"));
+        assertEquals(expected, actual);
     }
 
 }

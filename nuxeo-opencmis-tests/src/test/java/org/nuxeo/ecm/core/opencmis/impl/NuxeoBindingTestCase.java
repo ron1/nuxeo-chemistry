@@ -12,7 +12,6 @@
 package org.nuxeo.ecm.core.opencmis.impl;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,21 +19,17 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.chemistry.opencmis.commons.SessionParameter;
-import org.apache.chemistry.opencmis.commons.data.Properties;
-import org.apache.chemistry.opencmis.commons.data.PropertyData;
-import org.apache.chemistry.opencmis.commons.data.PropertyString;
 import org.apache.chemistry.opencmis.commons.enums.CmisVersion;
 import org.apache.chemistry.opencmis.commons.server.CallContext;
 import org.apache.chemistry.opencmis.commons.server.CmisService;
-import org.apache.chemistry.opencmis.commons.spi.BindingsObjectFactory;
 import org.apache.chemistry.opencmis.commons.spi.CmisBinding;
 import org.apache.chemistry.opencmis.server.impl.CallContextImpl;
 import org.apache.chemistry.opencmis.server.shared.ThresholdOutputStreamFactory;
-import org.nuxeo.ecm.core.api.CoreSession;
 import org.nuxeo.ecm.core.opencmis.bindings.NuxeoCmisServiceFactory;
 import org.nuxeo.ecm.core.opencmis.bindings.NuxeoCmisServiceFactoryManager;
 import org.nuxeo.ecm.core.opencmis.impl.client.NuxeoBinding;
 import org.nuxeo.ecm.core.opencmis.impl.server.NuxeoRepositories;
+import org.nuxeo.ecm.core.opencmis.impl.server.NuxeoRepository;
 import org.nuxeo.ecm.core.storage.sql.SQLRepositoryTestCase;
 import org.nuxeo.runtime.api.Framework;
 
@@ -54,14 +49,20 @@ public class NuxeoBindingTestCase {
 
     public CmisBinding binding;
 
-    public static class NuxeoTestCase extends SQLRepositoryTestCase {
-        public String getRepositoryId() {
-            return REPOSITORY_NAME;
-        }
+    protected boolean supportsJoins() {
+        // backport from 5.9.6
+        return true;
+    }
 
-        public CoreSession getSession() {
-            return session;
-        }
+    protected boolean returnsRootInFolderQueries() {
+        return supportsJoins();
+    }
+
+    protected boolean supportsNXQLQueryTransformers() {
+        return !supportsJoins();
+    }
+
+    public static class NuxeoTestCase extends SQLRepositoryTestCase {
     }
 
     public NuxeoTestCase nuxeotc;
@@ -70,6 +71,7 @@ public class NuxeoBindingTestCase {
         nuxeotc = new NuxeoTestCase();
         nuxeotc.setUp();
         deployBundles();
+        nuxeotc.fireFrameworkStarted();
         nuxeotc.openSession();
 
         Map<String, String> params = new HashMap<String, String>();
@@ -117,12 +119,13 @@ public class NuxeoBindingTestCase {
     }
 
     public void initBinding(String username) throws Exception {
-        repositoryId = nuxeotc.getRepositoryId();
-        CoreSession coreSession = nuxeotc.getSession();
-        rootFolderId = coreSession.getRootDocument().getId();
+        repositoryId = nuxeotc.database.repositoryName;
+        NuxeoRepository repository = Framework.getService(
+                NuxeoRepositories.class).getRepository(repositoryId);
+        repository.setSupportsJoins(supportsJoins());
+        rootFolderId = repository.getRootFolderId();
 
-        NuxeoCmisServiceFactoryManager manager =
-                Framework.getLocalService(NuxeoCmisServiceFactoryManager.class);
+        NuxeoCmisServiceFactoryManager manager = Framework.getService(NuxeoCmisServiceFactoryManager.class);
         NuxeoCmisServiceFactory serviceFactory = manager.getNuxeoCmisServiceFactory();
         ThresholdOutputStreamFactory streamFactory = ThresholdOutputStreamFactory.newInstance(
                 new File(System.getProperty("java.io.tmpdir")),
@@ -136,7 +139,6 @@ public class NuxeoBindingTestCase {
         context.put(CallContext.USERNAME, username);
         context.put(CallContext.PASSWORD, PASSWORD);
         CmisService service = serviceFactory.getService(context);
-        // use manual local bindings to keep the session open
         binding = new NuxeoBinding(service);
     }
 
@@ -158,7 +160,6 @@ public class NuxeoBindingTestCase {
             nuxeotc.closeSession();
             nuxeotc.tearDown();
         }
-        NuxeoRepositories.clear();
     }
 
     public void closeBinding() {
@@ -167,10 +168,5 @@ public class NuxeoBindingTestCase {
         }
     }
 
-    protected Properties createProperties(String key, String value) {
-        BindingsObjectFactory factory = binding.getObjectFactory();
-        PropertyString prop = factory.createPropertyStringData(key, value);
-        return factory.createPropertiesData(Collections.<PropertyData<?>> singletonList(prop));
-    }
-    
+
 }

@@ -51,29 +51,30 @@ public class NuxeoDocument extends NuxeoFileableObject implements Document {
     @Override
     public ObjectId checkIn(boolean major, Map<String, ?> properties,
             ContentStream contentStream, String checkinComment) {
-        Holder<String> idHolder = new Holder<String>(getId());
-        service.checkIn(getRepositoryId(), idHolder, major, 
-                objectFactory.convertProperties(properties, type, null, UPDATABILITY_READWRITE),
-                objectFactory.convertContentStream(contentStream), checkinComment, 
-                null, null, null, null);
-        String verId = idHolder.getValue();
-        return session.createObjectId(verId);
+        return checkIn(major, properties, contentStream, checkinComment, null,
+                null, null);
     }
 
     @Override
     public ObjectId checkIn(boolean major, Map<String, ?> properties,
             ContentStream contentStream, String checkinComment,
             List<Policy> policies, List<Ace> addAces, List<Ace> removeAces) {
-        // TODO policies, addAces, removeAces
-        return checkIn(major, properties, contentStream, checkinComment);
+        Holder<String> idHolder = new Holder<>(getId());
+        service.checkIn(getRepositoryId(), idHolder, Boolean.valueOf(major),
+                objectFactory.convertProperties(properties, type, null,
+                        UPDATABILITY_READWRITE),
+                objectFactory.convertContentStream(contentStream),
+                checkinComment, objectFactory.convertPolicies(policies),
+                objectFactory.convertAces(addAces),
+                objectFactory.convertAces(removeAces), null);
+        return session.createObjectId(idHolder.getValue());
     }
 
     @Override
     public ObjectId checkOut() {
-        Holder<String> idHolder = new Holder<String>(getId());
+        Holder<String> idHolder = new Holder<>(getId());
         service.checkOut(getRepositoryId(), idHolder, null, null);
-        String pwcId = idHolder.getValue();
-        return session.createObjectId(pwcId);
+        return session.createObjectId(idHolder.getValue());
     }
 
     @Override

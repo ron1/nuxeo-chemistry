@@ -68,10 +68,9 @@ public class NuxeoFolder extends NuxeoFileableObject implements Folder {
             OperationContext context) {
         String id = service.createDocument(getRepositoryId(),
                 session.convertProperties(properties), getId(), contentStream,
-                versioningState,
-                session.objectFactory.convertPolicies(policies),
-                session.objectFactory.convertAces(addAces),
-                session.objectFactory.convertAces(removeAces), null);
+                versioningState, objectFactory.convertPolicies(policies),
+                objectFactory.convertAces(addAces),
+                objectFactory.convertAces(removeAces), null);
         // must now refetch doc
         return (Document) session.getObject(new ObjectIdImpl(id), context);
     }
@@ -206,8 +205,7 @@ public class NuxeoFolder extends NuxeoFileableObject implements Folder {
                     }
                     NuxeoObjectData data = new NuxeoObjectData(service, child,
                             context);
-                    CmisObject ob = session.objectFactory.convertObject(data,
-                            context);
+                    CmisObject ob = objectFactory.convertObject(data, context);
                     items.add(ob);
                 }
                 return new Page<CmisObject>(items, totalItems,

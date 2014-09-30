@@ -11,12 +11,12 @@
  */
 package org.nuxeo.ecm.core.opencmis.bindings;
 
+import java.io.File;
 import java.math.BigInteger;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.chemistry.opencmis.commons.exceptions.CmisInvalidArgumentException;
+import org.apache.chemistry.opencmis.commons.exceptions.CmisRuntimeException;
 import org.apache.chemistry.opencmis.commons.impl.server.AbstractServiceFactory;
 import org.apache.chemistry.opencmis.commons.server.CallContext;
 import org.apache.chemistry.opencmis.commons.server.CmisService;
@@ -27,6 +27,7 @@ import org.apache.commons.lang.StringUtils;
 import org.nuxeo.ecm.core.opencmis.impl.server.NuxeoCmisService;
 import org.nuxeo.ecm.core.opencmis.impl.server.NuxeoRepositories;
 import org.nuxeo.ecm.core.opencmis.impl.server.NuxeoRepository;
+import org.nuxeo.runtime.api.Framework;
 
 /**
  * Factory for a wrapped {@link NuxeoCmisService}.
@@ -34,59 +35,153 @@ import org.nuxeo.ecm.core.opencmis.impl.server.NuxeoRepository;
  * Called for each method dispatch by
  * {@link org.apache.chemistry.opencmis.server.impl.atompub.CmisAtomPubServlet}
  * or
- * {@link org.apache.chemistry.opencmis.server.impl.atompub.CmisBrowserBindingServlet}
+ * {@link org.apache.chemistry.opencmis.server.impl.browser.CmisBrowserBindingServlet}
  * or
  * {@link org.apache.chemistry.opencmis.server.impl.webservices.AbstractService}.
  */
 public class NuxeoCmisServiceFactory extends AbstractServiceFactory {
 
-    public static final BigInteger DEFAULT_TYPES_MAX_ITEMS = BigInteger.valueOf(100);
-    public static final BigInteger DEFAULT_TYPES_DEPTH = BigInteger.valueOf(-1);
-    public static final BigInteger DEFAULT_MAX_ITEMS = BigInteger.valueOf(100);
-    public static final BigInteger DEFAULT_DEPTH = BigInteger.valueOf(2);
+    public static final String PROP_TEMP_DIRECTORY = "service.tempDirectory";
 
-    protected Map<String, NuxeoRepository> repositories;
+    public static final String PROP_ENCRYPT_TEMP_FILES = "service.encryptTempFiles";
 
-    private CmisServiceWrapperManager wrapperManager;
-    
+    public static final String PROP_MEMORY_THERESHOLD = "service.memoryThreshold";
+
+    public static final String PROP_MAX_CONTENT_SIZE = "service.maxContentSize";
+
+    public static final String PROP_DEFAULT_TYPES_MAX_ITEMS = "service.defaultTypesMaxItems";
+
+    public static final String PROP_DEFAULT_TYPES_DEPTH = "service.defaultTypesDepth";
+
+    public static final String PROP_DEFAULT_MAX_ITEMS = "service.defaultMaxItems";
+
+    public static final String PROP_DEFAULT_DEPTH = "service.defaultDepth";
+
+    public static final int DEFAULT_TYPES_MAX_ITEMS = 100;
+
+    public static final int DEFAULT_TYPES_DEPTH = -1;
+
+    public static final int DEFAULT_MAX_ITEMS = 100;
+
+    public static final int DEFAULT_DEPTH = 2;
+
+    protected CmisServiceWrapperManager wrapperManager;
+
+    protected BigInteger defaultTypesMaxItems;
+
+    protected BigInteger defaultTypesDepth;
+
+    protected BigInteger defaultMaxItems;
+
+    protected BigInteger defaultDepth;
+
+    protected File tempDirectory;
+
+    protected boolean encryptTempFiles;
+
+    protected long memoryThreshold;
+
+    protected long maxContentSize;
+
     @Override
     public void init(Map<String, String> parameters) {
-        repositories = Collections.synchronizedMap(new HashMap<String, NuxeoRepository>());
-
+        initParameters(parameters);
         wrapperManager = new CmisServiceWrapperManager();
         wrapperManager.addWrappersFromServiceFactoryParameters(parameters);
+        // wrap the service to provide default parameter checks
         wrapperManager.addOuterWrapper(ConformanceCmisServiceWrapper.class,
-                DEFAULT_TYPES_MAX_ITEMS, DEFAULT_TYPES_DEPTH, DEFAULT_MAX_ITEMS, DEFAULT_DEPTH);
+                defaultTypesMaxItems, defaultTypesDepth, defaultMaxItems,
+                defaultDepth);
     }
 
-    @Override
-    public void destroy() {
-        repositories = null;
+    protected void initParameters(Map<String, String> parameters) {
+        String tempDirectoryStr = parameters.get(PROP_TEMP_DIRECTORY);
+        tempDirectory = StringUtils.isBlank(tempDirectoryStr) ? super.getTempDirectory()
+                : new File(tempDirectoryStr.trim());
+        String encryptTempStr = parameters.get(PROP_ENCRYPT_TEMP_FILES);
+        encryptTempFiles = StringUtils.isBlank(encryptTempStr) ? super.encryptTempFiles()
+                : Boolean.parseBoolean(encryptTempStr.trim());
+        memoryThreshold = getLongParameter(parameters, PROP_MEMORY_THERESHOLD,
+                super.getMemoryThreshold());
+        maxContentSize = getLongParameter(parameters, PROP_MAX_CONTENT_SIZE,
+                super.getMaxContentSize());
+        defaultTypesMaxItems = getBigIntegerParameter(parameters,
+                PROP_DEFAULT_TYPES_MAX_ITEMS, DEFAULT_TYPES_MAX_ITEMS);
+        defaultTypesDepth = getBigIntegerParameter(parameters,
+                PROP_DEFAULT_TYPES_DEPTH, DEFAULT_TYPES_DEPTH);
+        defaultMaxItems = getBigIntegerParameter(parameters,
+                PROP_DEFAULT_MAX_ITEMS, DEFAULT_MAX_ITEMS);
+        defaultDepth = getBigIntegerParameter(parameters, PROP_DEFAULT_DEPTH,
+                DEFAULT_DEPTH);
+    }
+
+    protected static long getLongParameter(Map<String, String> parameters,
+            String key, long def) {
+        String value = parameters.get(key);
+        try {
+            return StringUtils.isBlank(value) ? def : Long.parseLong(value);
+        } catch (NumberFormatException e) {
+            throw new CmisRuntimeException(
+                    "Could not parse configuration values for " + key + ": "
+                            + e.getMessage(), e);
+        }
+    }
+
+    protected static BigInteger getBigIntegerParameter(
+            Map<String, String> parameters, String key, int def) {
+        String value = parameters.get(key);
+        try {
+            return StringUtils.isBlank(value) ? BigInteger.valueOf(def)
+                    : new BigInteger(value);
+        } catch (NumberFormatException e) {
+            throw new CmisRuntimeException(
+                    "Could not parse configuration values for " + key + ": "
+                            + e.getMessage(), e);
+        }
     }
 
     @Override
     public CmisService getService(CallContext context) {
         String repositoryId = context.getRepositoryId();
-        NuxeoRepository repository = null;
-        if (!StringUtils.isEmpty(repositoryId)) {
-            repository = NuxeoRepositories.getRepository(repositoryId);
+        if (StringUtils.isBlank(repositoryId)) {
+            repositoryId = null;
+        } else {
+            NuxeoRepository repository = null;
+            try {
+                repository = Framework.getService(
+                        NuxeoRepositories.class).getRepository(repositoryId);
+            } catch (Exception e) {
+                throw new CmisRuntimeException(e.getMessage(), e);
+            }
             if (repository == null) {
                 throw new CmisInvalidArgumentException("No such repository: "
                         + repositoryId);
             }
         }
-        NuxeoCmisService nuxeoCmisService = new NuxeoCmisService(repository);
-        CallContextAwareCmisService service =
-                (CallContextAwareCmisService) wrapperManager.wrap(nuxeoCmisService);
-
-        // hand over the call context to the service object
+        NuxeoCmisService nuxeoCmisService = new NuxeoCmisService(repositoryId);
+        CallContextAwareCmisService service = (CallContextAwareCmisService) wrapperManager.wrap(nuxeoCmisService);
         service.setCallContext(context);
-        if (repository != null && nuxeoCmisService.getCoreSession() == null) {
-            throw new CmisInvalidArgumentException("No such repository: "
-                    + repositoryId);
-        }
-
         return service;
+    }
+
+    @Override
+    public File getTempDirectory() {
+        return tempDirectory;
+    }
+
+    @Override
+    public boolean encryptTempFiles() {
+        return encryptTempFiles;
+    }
+
+    @Override
+    public int getMemoryThreshold() {
+        return (int) memoryThreshold;
+    }
+
+    @Override
+    public long getMaxContentSize() {
+        return maxContentSize;
     }
 
 }

@@ -62,9 +62,9 @@ public abstract class NuxeoObject implements CmisObject {
     protected final NuxeoSession session;
 
     protected final CmisService service;
-    
+
     protected final NuxeoCmisService nuxeoCmisService;
-    
+
     protected final NuxeoObjectFactory objectFactory;
 
     public final NuxeoObjectData data;
@@ -258,28 +258,34 @@ public abstract class NuxeoObject implements CmisObject {
 
     @Override
     public Acl addAcl(List<Ace> addAces, AclPropagation aclPropagation) {
-        throw new CmisNotSupportedException();
+        return service.applyAcl(getRepositoryId(), getId(),
+                objectFactory.convertAces(addAces), null, aclPropagation, null);
     }
 
     @Override
     public Acl applyAcl(List<Ace> addAces, List<Ace> removeAces,
             AclPropagation aclPropagation) {
-        throw new CmisNotSupportedException();
+        return service.applyAcl(getRepositoryId(), getId(),
+                objectFactory.convertAces(addAces),
+                objectFactory.convertAces(removeAces), aclPropagation, null);
     }
 
     @Override
     public Acl setAcl(List<Ace> aces) {
-        throw new CmisNotSupportedException();
+        return service.applyAcl(getRepositoryId(), getId(),
+                objectFactory.convertAces(aces),
+                AclPropagation.REPOSITORYDETERMINED);
     }
 
     @Override
     public Acl getAcl() {
-        throw new CmisNotSupportedException();
+        return data.getAcl();
     }
 
     @Override
     public Acl removeAcl(List<Ace> removeAces, AclPropagation aclPropagation) {
-        throw new CmisNotSupportedException();
+        return service.applyAcl(getRepositoryId(), getId(), null,
+                objectFactory.convertAces(removeAces), aclPropagation, null);
     }
 
     @Override

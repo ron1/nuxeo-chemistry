@@ -37,9 +37,10 @@ import org.nuxeo.ecm.core.api.IdRef;
 import org.nuxeo.ecm.core.opencmis.impl.server.NuxeoCmisService;
 
 /**
- * Test service wrapper that adds "Last-Modified" header to GetChildren NavigationService response.
+ * Test service wrapper that adds "Last-Modified" header to GetChildren
+ * NavigationService response.
  *
- * @since 5.9.5
+ * @since 5.9.6
  */
 public class LastModifiedServiceWrapper extends AbstractCmisServiceWrapper {
 
@@ -60,16 +61,17 @@ public class LastModifiedServiceWrapper extends AbstractCmisServiceWrapper {
         } catch (ClientException e) {
             throw new CmisRuntimeException(e.toString(), e);
         }
-        
-        ObjectInFolderList children = getWrappedService().getChildren(repositoryId, folderId, 
-                filter, orderBy, includeAllowableActions, includeRelationships, renditionFilter,
+
+        ObjectInFolderList children = getWrappedService().getChildren(
+                repositoryId, folderId, filter, orderBy,
+                includeAllowableActions, includeRelationships, renditionFilter,
                 includePathSegment, maxItems, skipCount, extension);
-        
+
         String lastModifiedResHeader = DateTimeHelper.formatHttpDateTime(lastModified);
         setResponseHeader("Last-Modified", lastModifiedResHeader);
         return children;
     }
-    
+
     private DocumentModel getDocumentModel(String id) throws ClientException {
         NuxeoCmisService nuxeoCmisService = NuxeoCmisService.extractFromCmisService(this);
         CoreSession coreSession = nuxeoCmisService.getCoreSession();
@@ -85,8 +87,8 @@ public class LastModifiedServiceWrapper extends AbstractCmisServiceWrapper {
     }
 
     private void setResponseHeader(String headerName, String headerValue) {
-        HttpServletResponse response = 
-                (HttpServletResponse) getCallContext().get(CallContext.HTTP_SERVLET_RESPONSE);
+        HttpServletResponse response = (HttpServletResponse) getCallContext().get(
+                CallContext.HTTP_SERVLET_RESPONSE);
         response.setHeader(headerName, headerValue);
     }
 

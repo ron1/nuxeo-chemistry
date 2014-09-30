@@ -165,9 +165,8 @@ public class NuxeoObjectFactory implements ObjectFactory {
         if (contentStream == null) {
             return null;
         }
-        BigInteger length = (contentStream.getLength() < 0 
-                ? null : BigInteger.valueOf(contentStream.getLength()));
-
+        long len = contentStream.getLength();
+        BigInteger length = len < 0 ? null : BigInteger.valueOf(len);
         return of.createContentStream(contentStream.getFileName(), length,
                 contentStream.getMimeType(), contentStream.getStream());
     }
