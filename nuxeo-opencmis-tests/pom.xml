@@ -6,6 +6,7 @@
     <version>7.2</version>
   </parent>
   <artifactId>nuxeo-opencmis-tests</artifactId>
+  <version>7.2-NXP2</version>
   <name>Nuxeo Chemistry OpenCMIS Tests</name>
   <description>Nuxeo Core: Chemistry OpenCMIS Tests</description>
   <dependencies>
@@ -109,6 +110,7 @@
     <dependency>
       <groupId>org.nuxeo.ecm.core</groupId>
       <artifactId>nuxeo-opencmis-bindings</artifactId>
+      <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>javax.transaction</groupId>
