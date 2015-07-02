@@ -8,10 +8,14 @@
 
   <groupId>org.nuxeo.ecm.core</groupId>
   <artifactId>nuxeo-chemistry</artifactId>
-  <version>7.2-NXP3-SNAPSHOT</version>
+  <version>7.2-NXP3</version>
   <name>Nuxeo Chemistry</name>
   <description>Nuxeo Core: Chemistry</description>
   <packaging>pom</packaging>
+
+  <properties>
+    <nuxeo.opencmis.version>7.2-NXP3</nuxeo.opencmis.version>
+  </properties>
 
   <modules>
     <module>nuxeo-opencmis-impl</module>
