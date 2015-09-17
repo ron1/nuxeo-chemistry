@@ -12,6 +12,7 @@
 package org.nuxeo.ecm.core.opencmis.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -19,19 +20,26 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.apache.chemistry.opencmis.commons.data.CacheHeaderContentStream;
 import org.apache.chemistry.opencmis.commons.data.ContentStream;
+import org.apache.chemistry.opencmis.commons.data.LastModifiedContentStream;
 import org.apache.chemistry.opencmis.commons.data.ObjectData;
 import org.apache.chemistry.opencmis.commons.data.RenditionData;
 import org.apache.chemistry.opencmis.commons.impl.Constants;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.nuxeo.ecm.core.api.CoreSession;
+import org.nuxeo.ecm.core.api.DocumentModel;
+import org.nuxeo.ecm.core.api.IdRef;
 import org.nuxeo.ecm.core.opencmis.impl.server.NuxeoCmisService;
 import org.nuxeo.ecm.core.storage.sql.ra.PoolingRepositoryFactory;
 import org.nuxeo.ecm.core.test.annotations.Granularity;
 import org.nuxeo.ecm.core.test.annotations.RepositoryConfig;
+import org.nuxeo.ecm.platform.rendition.Rendition;
+import org.nuxeo.ecm.platform.rendition.service.RenditionService;
 import org.nuxeo.runtime.test.runner.Deploy;
 import org.nuxeo.runtime.test.runner.Features;
 import org.nuxeo.runtime.test.runner.FeaturesRunner;
@@ -52,6 +60,9 @@ public class TestCmisBindingRenditions extends TestCmisBindingBase {
 
     @Inject
     protected CoreSession coreSession;
+
+    @Inject
+    protected RenditionService renditionService;
 
     @Before
     public void setUp() throws Exception {
@@ -105,9 +116,18 @@ public class TestCmisBindingRenditions extends TestCmisBindingBase {
         assertEquals("text.png", cs.getFileName());
         assertEquals(TEXT_PNG_ICON_SIZE, cs.getBigLength().longValue());
 
+        DocumentModel doc = coreSession.getDocument(new IdRef(ob.getId()));
+        Rendition rendition = renditionService.getRendition(doc, "pdf", true);
         cs = objService.getContentStream(repositoryId, ob.getId(), "nuxeo:rendition:pdf", null, null, null);
         assertEquals("application/pdf", cs.getMimeType());
-        assertEquals("testfile1_Title.pdf", cs.getFileName());
+        assertEquals("testfile.txt.pdf", cs.getFileName());
+        assertTrue(cs instanceof CacheHeaderContentStream);
+        CacheHeaderContentStream chcs;
+        chcs = (CacheHeaderContentStream) cs;
+        assertEquals(DigestUtils.md5Hex(chcs.getStream()), chcs.getETag());
+        LastModifiedContentStream lmcs;
+        lmcs = (LastModifiedContentStream) cs;
+        assertEquals(rendition.getModificationDate(), lmcs.getLastModified());
     }
 
     @Test
@@ -153,19 +173,6 @@ public class TestCmisBindingRenditions extends TestCmisBindingBase {
         renditions = objService.getRenditions(repositoryId, ob.getId(), "application/*,cmis:thumbnail", null, null,
                 null);
         assertEquals(4, renditions.size());
-    }
-
-    @Test
-    public void testFilenameWithExt() {
-        assertEquals("a.x", NuxeoCmisService.filenameWithExt("a.", "x"));
-        assertEquals("a.x", NuxeoCmisService.filenameWithExt("a.c", "x"));
-        assertEquals("a.x", NuxeoCmisService.filenameWithExt("a.ar", "x"));
-        assertEquals("a.x", NuxeoCmisService.filenameWithExt("a.doc", "x"));
-        assertEquals("a.x", NuxeoCmisService.filenameWithExt("a.jpeg", "x"));
-        assertEquals("a.smurf.x", NuxeoCmisService.filenameWithExt("a.smurf", "x"));
-        assertEquals("a.b c.x", NuxeoCmisService.filenameWithExt("a.b c", "x"));
-        assertEquals("a.x", NuxeoCmisService.filenameWithExt("a", "x"));
-        assertEquals("file.x", NuxeoCmisService.filenameWithExt("file", "x"));
     }
 
 }
