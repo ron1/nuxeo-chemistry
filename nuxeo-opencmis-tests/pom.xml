@@ -3,7 +3,7 @@
   <parent>
     <groupId>org.nuxeo.ecm.core</groupId>
     <artifactId>nuxeo-chemistry</artifactId>
-    <version>7.2-NXP3</version>
+    <version>7.2-CKS1-SNAPSHOT</version>
   </parent>
   <artifactId>nuxeo-opencmis-tests</artifactId>
   <name>Nuxeo Chemistry OpenCMIS Tests</name>
@@ -251,6 +251,11 @@
     <dependency>
       <groupId>com.sun.xml.ws</groupId>
       <artifactId>jaxws-rt</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.nuxeo.ecm.platform</groupId>
+      <artifactId>nuxeo-platform-url-core</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

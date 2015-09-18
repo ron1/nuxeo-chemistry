@@ -8,13 +8,14 @@
 
   <groupId>org.nuxeo.ecm.core</groupId>
   <artifactId>nuxeo-chemistry</artifactId>
-  <version>7.2-NXP3</version>
+  <version>7.2-CKS1-SNAPSHOT</version>
   <name>Nuxeo Chemistry</name>
   <description>Nuxeo Core: Chemistry</description>
   <packaging>pom</packaging>
 
   <properties>
-    <nuxeo.opencmis.version>7.2-NXP3</nuxeo.opencmis.version>
+    <nuxeo.opencmis.version>7.2-CKS1-SNAPSHOT</nuxeo.opencmis.version>
+    <nuxeo.platform.rendition.core.version>7.2-CKSRND1</nuxeo.platform.rendition.core.version>
   </properties>
 
   <modules>
@@ -24,6 +25,16 @@
   </modules>
 
   <!-- dependencies and chemistry library version set in Nuxeo toplevel POM -->
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.nuxeo.ecm.platform</groupId>
+        <artifactId>nuxeo-platform-rendition-core</artifactId>
+        <version>${nuxeo.platform.rendition.core.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
 
   <repositories>
     <repository>
