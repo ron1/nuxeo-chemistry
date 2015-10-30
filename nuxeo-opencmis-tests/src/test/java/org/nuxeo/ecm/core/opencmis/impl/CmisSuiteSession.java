@@ -96,6 +96,7 @@ import org.junit.runner.RunWith;
 import org.nuxeo.ecm.core.api.ClientException;
 import org.nuxeo.ecm.core.api.CoreInstance;
 import org.nuxeo.ecm.core.api.CoreSession;
+import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.IdRef;
 import org.nuxeo.ecm.core.api.Lock;
 import org.nuxeo.ecm.core.api.PathRef;
@@ -396,6 +397,32 @@ public class CmisSuiteSession {
         doc.refresh(); // reload
         assertEquals("other title", doc.getPropertyValue("dc:title"));
         assertEquals(Arrays.asList("foo"), doc.getPropertyValue("dc:subjects"));
+    }
+
+    @Test
+    public void testPropertyFromSecondaryType() throws Exception {
+        DocumentModel doc = coreSession.getDocument(new PathRef("/testfolder1/testfile1"));
+        doc.addFacet("CustomFacetWithMySchema2");
+        doc.setPropertyValue("my2:string", "foo");
+        coreSession.saveDocument(doc);
+        coreSession.save();
+        TransactionHelper.commitOrRollbackTransaction();
+        TransactionHelper.startTransaction();
+
+        Document file = (Document) session.getObjectByPath("/testfolder1/testfile1");
+
+        Property<?> p = file.getProperty("cmis:secondaryObjectTypeIds");
+        assertNotNull(p);
+        @SuppressWarnings("unchecked")
+        List<String> stl = (List<String>) p.getValues();
+        assertNotNull(stl);
+        assertTrue(stl.contains("facet:CustomFacetWithMySchema2"));
+        assertEquals("foo", file.getPropertyValue("my2:string"));
+
+        // change secondary prop
+        file.updateProperties(Collections.singletonMap("my2:string", "bar"), true); // refresh
+        // check updated
+        assertEquals("bar", file.getPropertyValue("my2:string"));
     }
 
     @Test
