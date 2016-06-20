@@ -8,13 +8,13 @@
 
   <groupId>org.nuxeo.ecm.core</groupId>
   <artifactId>nuxeo-chemistry</artifactId>
-  <version>8.2-CKS2-SNAPSHOT</version>
+  <version>8.2-CKS2</version>
   <name>Nuxeo Chemistry</name>
   <description>Nuxeo Core: Chemistry</description>
   <packaging>pom</packaging>
 
   <properties>
-    <nuxeo.opencmis.version>8.2-CKS2-SNAPSHOT</nuxeo.opencmis.version>
+    <nuxeo.opencmis.version>8.2-CKS2</nuxeo.opencmis.version>
   </properties>
 
   <modules>
