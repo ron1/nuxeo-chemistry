@@ -21,6 +21,10 @@ package org.nuxeo.ecm.core.opencmis.impl.server;
 import static org.nuxeo.ecm.core.api.event.DocumentEventTypes.DOCUMENT_CREATED;
 import static org.nuxeo.ecm.core.api.event.DocumentEventTypes.DOCUMENT_REMOVED;
 import static org.nuxeo.ecm.core.api.event.DocumentEventTypes.DOCUMENT_UPDATED;
+import static org.nuxeo.ecm.core.blob.binary.AbstractBinaryManager.MD5_DIGEST;
+import static org.nuxeo.ecm.core.opencmis.impl.server.NuxeoContentStream.CONTENT_MD5_DIGEST_ALGORITHM;
+import static org.nuxeo.ecm.core.opencmis.impl.server.NuxeoContentStream.CONTENT_MD5_HEADER_NAME;
+import static org.nuxeo.ecm.core.opencmis.impl.server.NuxeoContentStream.DIGEST_HEADER_NAME;
 import static org.nuxeo.ecm.core.opencmis.impl.server.NuxeoObjectData.REND_STREAM_RENDITION_PREFIX;
 
 import java.io.IOException;
@@ -151,6 +155,7 @@ import org.nuxeo.ecm.core.query.QueryParseException;
 import org.nuxeo.ecm.core.query.sql.NXQL;
 import org.nuxeo.ecm.core.schema.FacetNames;
 import org.nuxeo.ecm.core.security.SecurityService;
+import org.nuxeo.ecm.core.storage.sql.coremodel.SQLDocumentVersion.VersionNotModifiableException;
 import org.nuxeo.ecm.platform.audit.api.AuditReader;
 import org.nuxeo.ecm.platform.audit.api.LogEntry;
 import org.nuxeo.ecm.platform.filemanager.api.FileManager;
@@ -584,7 +589,8 @@ public class NuxeoCmisService extends AbstractCmisService implements CallContext
 
         NuxeoObjectData data = new NuxeoObjectData(this, doc);
         updateProperties(data, null, properties, true);
-        if (!created && contentStream != null) {
+        boolean setContentStream = !created && contentStream != null;
+        if (setContentStream) {
             try {
                 NuxeoPropertyData.setContentStream(doc, contentStream, true);
             } catch (CmisContentAlreadyExistsException e) {
@@ -602,6 +608,9 @@ public class NuxeoCmisService extends AbstractCmisService implements CallContext
             doc = coreSession.createDocument(doc);
         } else {
             doc = coreSession.saveDocument(doc);
+        }
+        if (setContentStream) {
+            NuxeoPropertyData.validateBlobDigest(doc, callContext);
         }
         data.doc = doc;
         save();
@@ -832,21 +841,43 @@ public class NuxeoCmisService extends AbstractCmisService implements CallContext
     public ContentStream getContentStream(String repositoryId, String objectId, String streamId, BigInteger offset,
             BigInteger length, ExtensionsData extension) {
         // TODO offset, length
+        ContentStream cs = null;
+        HttpServletRequest request = (HttpServletRequest) callContext.get(CallContext.HTTP_SERVLET_REQUEST);
         if (streamId == null) {
             DocumentModel doc = getDocumentModel(objectId);
-            HttpServletRequest request = (HttpServletRequest) getCallContext().get(CallContext.HTTP_SERVLET_REQUEST);
-            ContentStream cs = NuxeoPropertyData.getContentStream(doc, request);
-            if (cs != null) {
-                return cs;
+            cs = NuxeoPropertyData.getContentStream(doc, request);
+            if (cs == null) {
+                throw new CmisConstraintException("No content stream: " + objectId);
             }
-            throw new CmisConstraintException("No content stream: " + objectId);
+        } else {
+            String renditionName = streamId.replaceAll("^" + REND_STREAM_RENDITION_PREFIX, "");
+            cs = getRenditionServiceStream(objectId, renditionName);
+            if (cs == null) {
+                throw new CmisInvalidArgumentException("Invalid stream id: " + streamId);
+            }
         }
-        String renditionName = streamId.replaceAll("^" + REND_STREAM_RENDITION_PREFIX, "");
-        ContentStream cs = getRenditionServiceStream(objectId, renditionName);
-        if (cs != null) {
-            return cs;
+        if (cs instanceof NuxeoContentStream) {
+            NuxeoContentStream ncs = (NuxeoContentStream) cs;
+            Blob blob = ncs.blob;
+            String blobDigestAlgorithm = blob.getDigestAlgorithm();
+            if (MD5_DIGEST.equals(blobDigestAlgorithm)
+                    && NuxeoContentStream.hasWantDigestRequestHeader(request, CONTENT_MD5_DIGEST_ALGORITHM)) {
+                setResponseHeader(CONTENT_MD5_HEADER_NAME, blob, callContext);
+            }
+            if (NuxeoContentStream.hasWantDigestRequestHeader(request, blobDigestAlgorithm)) {
+                setResponseHeader(DIGEST_HEADER_NAME, blob, callContext);
+            }
         }
-        throw new CmisInvalidArgumentException("Invalid stream id: " + streamId);
+        return cs;
+    }
+
+    protected void setResponseHeader(String headerName, Blob blob, CallContext callContext) {
+        String digest = NuxeoPropertyData.transcodeHexToBase64(blob.getDigest());
+        HttpServletResponse response = (HttpServletResponse) callContext.get(CallContext.HTTP_SERVLET_RESPONSE);
+        if (DIGEST_HEADER_NAME.equalsIgnoreCase(headerName)) {
+            digest = blob.getDigestAlgorithm() + "=" + digest;
+        }
+        response.setHeader(headerName, digest);
     }
 
     /**
@@ -1083,7 +1114,8 @@ public class NuxeoCmisService extends AbstractCmisService implements CallContext
         // TODO test doc checkout state
         try {
             NuxeoPropertyData.setContentStream(doc, contentStream, !Boolean.FALSE.equals(overwriteFlag));
-            coreSession.saveDocument(doc);
+            doc = coreSession.saveDocument(doc);
+            NuxeoPropertyData.validateBlobDigest(doc, callContext);
             save();
         } catch (IOException e) {
             throw new CmisRuntimeException(e.toString(), e);
@@ -1819,7 +1851,8 @@ public class NuxeoCmisService extends AbstractCmisService implements CallContext
 
         NuxeoObjectData object = new NuxeoObjectData(this, doc);
         updateProperties(object, null, properties, false);
-        if (contentStream != null) {
+        boolean setContentStream = contentStream != null;
+        if (setContentStream) {
             try {
                 NuxeoPropertyData.setContentStream(doc, contentStream, true);
             } catch (IOException e) {
@@ -1828,8 +1861,16 @@ public class NuxeoCmisService extends AbstractCmisService implements CallContext
         }
         // comment for save event
         doc.putContextData("comment", checkinComment);
-        coreSession.saveDocument(doc);
-        DocumentRef ver = doc.checkIn(option, checkinComment);
+        doc = coreSession.saveDocument(doc);
+        if (setContentStream) {
+            NuxeoPropertyData.validateBlobDigest(doc, callContext);
+        }
+        DocumentRef ver;
+        try {
+            ver = doc.checkIn(option, checkinComment);
+        } catch (VersionNotModifiableException e) {
+            throw new CmisInvalidArgumentException("Cannot check in non-PWC: " + doc);
+        }
         doc.removeLock();
         save();
         objectIdHolder.setValue(getIdFromDocumentRef(ver));
