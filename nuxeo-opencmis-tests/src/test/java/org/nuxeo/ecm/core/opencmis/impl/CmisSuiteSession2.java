@@ -259,6 +259,7 @@ public class CmisSuiteSession2 {
                 }
             }
         }
+        deleteFiles(files);
     }
 
     @Test
@@ -306,6 +307,7 @@ public class CmisSuiteSession2 {
                 }
             }
         }
+        deleteFiles(files);
     }
 
     @Test
@@ -343,6 +345,7 @@ public class CmisSuiteSession2 {
                 }
             }
         }
+        deleteFiles(files);
     }
 
     protected JsonNode checkOkContentStreamResponse(String contentMD5Hex, ObjectMapper mapper,
@@ -381,10 +384,15 @@ public class CmisSuiteSession2 {
             File file = files[i] = Framework.createTempFile("NuxeoCMIS-", null);
             try (Writer writer = new FileWriter(file); Reader reader = new StringReader(content)) {
                 IOUtils.copy(reader, writer);
-                Framework.trackFile(file, reader);
             }
         }
         return files;
+    }
+
+    protected void deleteFiles(File[] files) throws IOException {
+        for (File file : files) {
+            file.delete();
+        }
     }
 
     @Test
