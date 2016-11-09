@@ -70,6 +70,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.GregorianCalendar;
@@ -126,6 +127,7 @@ import org.apache.chemistry.opencmis.commons.exceptions.CmisConstraintException;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisInvalidArgumentException;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisRuntimeException;
+import org.apache.chemistry.opencmis.commons.exceptions.CmisUpdateConflictException;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.AccessControlEntryImpl;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.AccessControlListImpl;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.AccessControlPrincipalDataImpl;
@@ -772,18 +774,36 @@ public class TestCmisBinding extends TestCmisBindingBase {
         }
     }
 
+    protected Holder<String> getChangeTokenHolder(ObjectData ob) {
+        return getChangeTokenHolder(ob.getProperties());
+    }
+
+    protected Holder<String> getChangeTokenHolder(Properties p) {
+        return new Holder<>((String) p.getProperties().get("cmis:changeToken").getFirstValue());
+    }
+
     @Test
     public void testUpdateProperties() throws Exception {
         ObjectData ob = getObjectByPath("/testfolder1/testfile1");
         assertEquals("testfile1_Title", getString(ob, "dc:title"));
-
         Properties props = createProperties("dc:title", "new title");
         Holder<String> objectIdHolder = new Holder<>(ob.getId());
-        objService.updateProperties(repositoryId, objectIdHolder, null, props, null);
+        Holder<String> changeTokenHolder = getChangeTokenHolder(ob);
+        objService.updateProperties(repositoryId, objectIdHolder, changeTokenHolder, props, null);
         assertEquals(ob.getId(), objectIdHolder.getValue());
 
         ob = getObject(ob.getId());
         assertEquals("new title", getString(ob, "dc:title"));
+
+        Holder<String>[] changeTokenHolders = new Holder[] { new Holder<>(null), new Holder<>("bogusChangeToken") };
+        for (int i = 0; i < changeTokenHolders.length; i++) {
+            try {
+                objService.updateProperties(repositoryId, objectIdHolder, changeTokenHolders[i], props, null);
+                fail(String.format("updateProperties with '%s' cmis:changeToken should fail", changeTokenHolders[i]));
+            } catch (CmisUpdateConflictException e) {
+                // ok
+            }
+        }
     }
 
     @Test
@@ -802,9 +822,13 @@ public class TestCmisBinding extends TestCmisBindingBase {
         assertEquals(Collections.emptyList(), v.getValues());
 
         // null value from NuxeoPropertyStringDataFixed
-        v = p.getProperties().get("cmis:changeToken");
+        v = p.getProperties().get("nuxeo:pos");
         assertNull(v.getFirstValue());
         assertEquals(Collections.emptyList(), v.getValues());
+
+        v = p.getProperties().get("cmis:changeToken");
+        Calendar lastModified = (Calendar) p.getProperties().get("dc:modified").getFirstValue();
+        assertEquals(Long.toString(lastModified.getTimeInMillis()), v.getFirstValue());
 
         // with filter
         p = objService.getProperties(repositoryId, ob.getId(), "cmis:name", null);
@@ -839,7 +863,8 @@ public class TestCmisBinding extends TestCmisBindingBase {
         // change secondary prop
         Properties props = createProperties("my2:string", "bar");
         Holder<String> objectIdHolder = new Holder<String>(ob.getId());
-        objService.updateProperties(repositoryId, objectIdHolder, null, props, null);
+        Holder<String> changeTokenHolder = getChangeTokenHolder(p);
+        objService.updateProperties(repositoryId, objectIdHolder, changeTokenHolder, props, null);
 
         // re-fetch
         p = objService.getProperties(repositoryId, ob.getId(), null, null);
@@ -868,8 +893,20 @@ public class TestCmisBinding extends TestCmisBindingBase {
 
         cs = new ContentStreamImpl("foo.txt", "text/plain; charset=UTF-8", STREAM_CONTENT);
         Holder<String> objectIdHolder = new Holder<>(ob.getId());
-        objService.setContentStream(repositoryId, objectIdHolder, Boolean.TRUE, null, cs, null);
+        Holder<String> changeTokenHolder = getChangeTokenHolder(ob);
+        objService.setContentStream(repositoryId, objectIdHolder, Boolean.TRUE, changeTokenHolder, cs, null);
         assertEquals(ob.getId(), objectIdHolder.getValue());
+
+        Holder<String>[] changeTokenHolders = new Holder[] { new Holder<>(null), new Holder<>("bogusChangeToken") };
+        for (int i = 0; i < changeTokenHolders.length; i++) {
+            try {
+                objService.setContentStream(repositoryId, objectIdHolder, Boolean.TRUE,
+                        changeTokenHolders[i], cs, null);
+                fail(String.format("setContentStream with '%s' cmis:changeToken should fail", changeTokenHolders[i]));
+            } catch (CmisUpdateConflictException e) {
+                // ok
+            }
+        }
 
         // refetch
         cs = objService.getContentStream(repositoryId, ob.getId(), null, null, null, null);
@@ -880,7 +917,18 @@ public class TestCmisBinding extends TestCmisBindingBase {
         assertEquals(STREAM_CONTENT, Helper.read(cs.getStream(), "UTF-8"));
 
         // delete
-        objService.deleteContentStream(repositoryId, objectIdHolder, null, null);
+        ob = objService.getObject(repositoryId, ob.getId(), null, null, null, null, null, null, null);
+        changeTokenHolder = getChangeTokenHolder(ob);
+        objService.deleteContentStream(repositoryId, objectIdHolder, changeTokenHolder, null);
+
+        for (int i = 0; i < changeTokenHolders.length; i++) {
+            try {
+                objService.deleteContentStream(repositoryId, objectIdHolder, changeTokenHolders[i], null);
+                fail(String.format("deleteContentStream with '%s' cmis:changeToken should fail", changeTokenHolders[i]));
+            } catch (CmisUpdateConflictException e) {
+                // ok
+            }
+        }
 
         // refetch
         try {
@@ -1505,7 +1553,7 @@ public class TestCmisBinding extends TestCmisBindingBase {
         checkReturnedValue(PropertyIds.CREATION_DATE, NOT_NULL);
         checkReturnedValue(PropertyIds.LAST_MODIFIED_BY, "john");
         checkReturnedValue(PropertyIds.LAST_MODIFICATION_DATE, NOT_NULL);
-        checkReturnedValue(PropertyIds.CHANGE_TOKEN, null);
+        checkReturnedValue(PropertyIds.CHANGE_TOKEN, NOT_NULL);
         checkReturnedValue(NuxeoTypeHelper.NX_PARENT_ID, NOT_NULL);
 
         // ----- Folder -----
@@ -1782,7 +1830,8 @@ public class TestCmisBinding extends TestCmisBindingBase {
 
         Properties props = createProperties("dc:description", "new description");
         idHolder = new Holder<>(ob.getId());
-        objService.updateProperties(repositoryId, idHolder, null, props, null);
+        Holder<String> changeTokenHolder = getChangeTokenHolder(ob);
+        objService.updateProperties(repositoryId, idHolder, changeTokenHolder, props, null);
         assertEquals(ob.getId(), idHolder.getValue());
 
         waitForIndexing();
@@ -2155,10 +2204,10 @@ public class TestCmisBinding extends TestCmisBindingBase {
         Properties properties = factory.createPropertiesData(Arrays.asList(propTitle, propDescription));
 
         Holder<String> objectIdHolder = new Holder<>(ob.getId());
-        objService.updateProperties(repositoryId, objectIdHolder, null, properties, null);
+        Holder<String> changeTokenHolder = getChangeTokenHolder(ob);
+        objService.updateProperties(repositoryId, objectIdHolder, changeTokenHolder, properties, null);
 
         sleepForFulltext();
-
         waitForIndexing();
 
         ObjectList res;
@@ -2211,7 +2260,8 @@ public class TestCmisBinding extends TestCmisBindingBase {
         Properties properties = factory.createPropertiesData(Arrays.asList(propTitle, propDescription));
 
         Holder<String> objectIdHolder = new Holder<>(ob.getId());
-        objService.updateProperties(repositoryId, objectIdHolder, null, properties, null);
+        Holder<String> changeTokenHolder = getChangeTokenHolder(ob);
+        objService.updateProperties(repositoryId, objectIdHolder, changeTokenHolder, properties, null);
 
         sleepForFulltext();
         waitForIndexing();
@@ -2233,10 +2283,10 @@ public class TestCmisBinding extends TestCmisBindingBase {
         Properties properties = factory.createPropertiesData(Arrays.asList(propTitle, propDescription));
 
         Holder<String> objectIdHolder = new Holder<>(ob.getId());
-        objService.updateProperties(repositoryId, objectIdHolder, null, properties, null);
+        Holder<String> changeTokenHolder = getChangeTokenHolder(ob);
+        objService.updateProperties(repositoryId, objectIdHolder, changeTokenHolder, properties, null);
 
         sleepForFulltext();
-
         waitForIndexing();
 
         ObjectList res;
