@@ -95,6 +95,7 @@ import org.apache.chemistry.opencmis.commons.exceptions.CmisNotSupportedExceptio
 import org.apache.chemistry.opencmis.commons.exceptions.CmisObjectNotFoundException;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisRuntimeException;
 import org.apache.chemistry.opencmis.commons.exceptions.CmisUpdateConflictException;
+import org.apache.chemistry.opencmis.commons.exceptions.CmisVersioningException;
 import org.apache.chemistry.opencmis.commons.impl.WSConverter;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.AbstractPropertyData;
 import org.apache.chemistry.opencmis.commons.impl.dataobjects.BindingsObjectFactoryImpl;
@@ -193,6 +194,9 @@ public class NuxeoCmisService extends AbstractCmisService implements CallContext
 
     public static final String PERMISSION_NOTHING = "Nothing";
 
+    public static final String ERROR_ON_CANCEL_CHECK_OUT_OF_DRAFT_VERSION_PROP =
+            "org.nuxeo.cmis.errorOnCancelCheckOutOfDraftVersion";
+
     private static final Log log = LogFactory.getLog(NuxeoCmisService.class);
 
     protected final BindingsObjectFactory objectFactory = new BindingsObjectFactoryImpl();
@@ -215,6 +219,8 @@ public class NuxeoCmisService extends AbstractCmisService implements CallContext
     protected final Set<String> readPermissions;
 
     protected final Set<String> writePermissions;
+
+    protected boolean errorOnCancelCheckOutOfDraftVersion;
 
     public static NuxeoCmisService extractFromCmisService(CmisService service) {
         if (service == null) {
@@ -260,6 +266,17 @@ public class NuxeoCmisService extends AbstractCmisService implements CallContext
         readPermissions = new HashSet<>(Arrays.asList(securityService.getPermissionsToCheck(SecurityConstants.READ)));
         writePermissions = new HashSet<>(
                 Arrays.asList(securityService.getPermissionsToCheck(SecurityConstants.READ_WRITE)));
+        if (Framework.isBooleanPropertyTrue(ERROR_ON_CANCEL_CHECK_OUT_OF_DRAFT_VERSION_PROP)) {
+            setErrorOnCancelCheckOutOfDraftVersion(true);
+        }
+    }
+
+    public void setErrorOnCancelCheckOutOfDraftVersion(boolean errorOnCancelCheckOutOfDraftVersion) {
+        this.errorOnCancelCheckOutOfDraftVersion = errorOnCancelCheckOutOfDraftVersion;
+    }
+
+    public boolean errorOnCancelCheckOutOfDraftVersion() {
+        return errorOnCancelCheckOutOfDraftVersion;
     }
 
     // called in a finally block from dispatcher
@@ -1962,6 +1979,10 @@ public class NuxeoCmisService extends AbstractCmisService implements CallContext
         // find last version
         DocumentRef verRef = coreSession.getLastDocumentVersionRef(docRef);
         if (verRef == null) {
+            if (errorOnCancelCheckOutOfDraftVersion() && "0.0".equals(doc.getVersionLabel())) {
+                throw new CmisVersioningException("Cannot cancelCheckOut of Draft Version since property '"
+                        + ERROR_ON_CANCEL_CHECK_OUT_OF_DRAFT_VERSION_PROP + "' is currently set.");
+            }
             // delete
             coreSession.removeDocument(docRef);
         } else {
